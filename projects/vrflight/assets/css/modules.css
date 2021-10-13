@@ -1,3 +1,15 @@
+@font-face {
+  font-family: 'NanumSquareLight';
+  font-family: 'NanumSquare';
+  font-family: 'NanumSquareBold';
+  font-family: 'NanumSquareExtraBold';
+  font-family: 'NanumSquareAcb';
+  font-family: 'NanumSquareAceb';
+  font-family: 'NanumSquareAcl';
+  font-family: 'NanumSquareAcr';
+  src: url(https://hangeul.pstatic.net/hangeul_static/css/nanum-square.css);
+}
+
 body {
   font-size: 100%;
 }
@@ -44,11 +56,11 @@ body {
 }
 
 body.modern h1, body.modern h2, body.modern h3, body.modern h4 {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'NanumSquareExtraBold';
   font-weight: 400;
 }
 body.modern p, body.modern a, body.modern label, body.modern address, body.modern figcaption {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'NanumSquareExtraBold';
 }
 body.modern a {
   color: #E74C3C;
@@ -102,7 +114,7 @@ body.modern [data-theme*=_ts2] {
 body.modern [data-theme*=_ts3] {
   position: relative;
   margin-left: 0.5em;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'NanumSquareExtraBold';
   font-weight: bold;
 }
 body.modern [data-theme*=_ts3]:before {
@@ -238,7 +250,7 @@ a.btn, button {
   padding: 1em;
   border-radius: 5px;
   border: none;
-  font-family: sans-serif;
+  font-family: 'NanumSquareExtraBold';
   font-size: 1em;
   cursor: pointer;
 }
@@ -289,7 +301,7 @@ input {
   width: 100%;
   max-width: 18rem;
   font-size: 1em;
-  font-family: sans-serif;
+  font-family: 'NanumSquareExtraBold';
 }
 
 textarea {
@@ -297,7 +309,7 @@ textarea {
   height: 12em;
   max-width: 18rem;
   font-size: 1em;
-  font-family: sans-serif;
+  font-family: 'NanumSquareExtraBold';
 }
 
 /* Page Title Background */
