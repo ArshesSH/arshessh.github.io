@@ -10,6 +10,7 @@
 	<link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700,900" rel="stylesheet">
     <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square.css" rel="stylesheet">
+    <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square-round.css" rel="stylesheet">
     <link rel="stylesheet" href="libs/font-awesome/css/font-awesome.min.css">
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/styles.css" rel="stylesheet">
@@ -19,6 +20,7 @@
     .nsNormal{font-family: 'nanum-square';}
     .nsExBold{font-family: 'NanumSquareExtraBold';}
     .nsBold{font-family: 'NanumSquareBold';}
+    .nsRExBold{font-family: 'NanumSquareRoundExtraBold';}
 </style>
 
 <body>
@@ -73,13 +75,13 @@
     <!-- End #lead -->
 
     <div id="about">
-        <div class="container">
+        <div class="container nsExBold">
             <div class="row">
                 <div class="col-md-4">
-                    <h2 class="heading nsExBold">About Me</h2>
+                    <h2 class="heading">About Me</h2>
                 </div>
                 <div class="col-md-8">
-                    <p class="nsBold">
+                    <p>
                         새로운 지식을 배우고 경험을 쌓기위해 노력하는 개발자
                     </p>
                 </div>
@@ -89,8 +91,8 @@
     <!-- End #about -->
 
     <div id="experience" class="background-alt">
-        <h2 class="heading">Experience</h2>
-        <div id="experience-timeline">
+        <h2 class="heading nsExBold">Experience</h2>
+        <div id="experience-timeline" class="nsExBold">
             <div data-date="December 2020 – June 2021">
                 <h3>FXGear</h3>
                 <h4>프로젝트 매니저 및 보조 개발자 (계약직)</h4>
@@ -118,9 +120,9 @@
     <!-- End #experience -->
 
     <div id="education">
-        <h2 class="heading">Education</h2>
-        <div class="education-block">
-            <h3>한서대학교</h3>
+        <h2 class="heading nsExBold">Education</h2>
+        <div class="education-block nsExBold">
+            <h3 >한서대학교</h3>
             <span class="education-date">2016.03 - 2022.02</span>
             <h4>항공소프트웨어공학과</h4>
             <p>
@@ -129,15 +131,15 @@
         </div>
         <!-- End .education-block -->
 
-        <div class="education-block">
+        <div class="education-block nsExBold">
             <h3>경동고등학교</h3>
             <span class="education-date">2012.03 - 2015.02</span>
             <h4>자연계</h4>
         </div>
         <!-- End .education-block -->
 
-        <div class="education-block">
-            <h3>중국어 어학연수</h3>
+        <div class="education-block nsExBold">
+            <h3>중국 어학연수</h3>
             <span class="education-date">2007.01 - 2008.08</span>
             <h4>중국, 심양</h4>
             <ul>
@@ -171,8 +173,8 @@
     </div>
     <!-- End #education -->
 
-    <div id="projects" class="background-alt">
-        <h2 class="heading">Projects</h2>
+    <div id="projects" class="background-alt nsExBold">
+        <h2 class="heading nsExBold">Projects</h2>
         <div class="container">
             <div class="row">
                 <div class="project shadow-large">
@@ -187,7 +189,7 @@
                             개발 도구 및 언어: UE4, C++, Blueprint, Photoshop, Blender3D<br>
                             프로젝트 설명: UE4를 이용한 VR F-16 Cockpit 시뮬레이터 개발 프로젝트입니다.
                         </p>
-                        <a href="vrflight/vrflight.html ">View Project</a>
+                        <a href="projects/vrflight/vrflight.html" target="_blank">View Project</a>
                     </div>
                     <!-- End .project-info -->
                 </div>
@@ -195,17 +197,17 @@
 
                 <div class="project shadow-large">
                     <div class="project-image">
-                        <img src="images/flight-controller.png" />
+                        <img src="images/flight-controller.png"  width="300" height="300" />
                     </div>
                     <!-- End .project-image -->
                     <div class="project-info">
                         <h3>고정익 무인항공기 수평자세제어 시스템</h3>
                         <p align="left">
                             담당 역할: 프로젝트 팀장 및 개발자<br>
-                            개발 도구 및 언어: Arduino Uno, C, C++<br>
+                            개발 도구 및 언어: Arduino, C, C++<br>
                             프로젝트 설명: Arduino Uno 보드에 탑재 가능한 고정익 항공기 수평자세제어 시스템을 개발한 프로젝트입니다.
                         </p>
-                        <a href="#">View Project</a>
+                        <a href="projects/flightcontroller/flightcontroller.html">View Project</a>
                     </div>
                     <!-- End .project-info -->
                 </div>
@@ -217,33 +219,39 @@
     <!-- End #projects -->
 
     <div id="skills">
-        <h2 class="heading">Skills</h2>
+        <h2 class="heading nsExBold">Skills</h2>
         <h3>Programming Language</h3>
         <div class="education-block">
-            <ul>
+            <ul align="center">
                 <li>C</li>
                 <li>C#</li>
                 <li>C++</li>
             </ul>
         </div>
+
         <h3>Language</h3>
-        <ul>
-            <li>English</li>
-            <li>中文</li>
-        </ul>
         <div class="education-block">
-            <h3>OS</h3>
-            <ul>
+            <ul align="center">
+                <li>English</li>
+                <li>中文</li>
+            </ul>
+        </div>
+
+        <h3>OS</h3>
+        <div class="education-block">
+            <ul align="center">
                 <li>Windows</li>
                 <li>Linux</li>
                 <li>Xenomai 3.0.3(RTOS)</li>
             </ul>
         </div>
+
+        <h3>IDE & Tool</h3>
         <div class="education-block">
-            <h3>IDE & Tool</h3>
-            <ul>
+            <ul align="center">
                 <li>Visual Studio</li>
                 <li>Android Studio</li>
+                <li>MySQL 8.0.26</li>
                 <li>Jira Software</li>
                 <li>Confluence</li>
                 <li>Unreal Engine 4</li>
@@ -254,8 +262,16 @@
                 <li>Goldwave</li>
             </ul>
         </div>
+
+        <h3>What I'm learning now</h3>
+        <div class="education-block">
+            <ul align="center">
+                <li>DirectX</li>
+            </ul>
+        </div>
     </div>
     <!-- End #skills -->
+
 
     <!--div id="contact">
         <h2>Get in Touch</h2>

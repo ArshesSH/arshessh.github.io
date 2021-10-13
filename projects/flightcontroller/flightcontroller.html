@@ -10,8 +10,16 @@
 	<link rel="stylesheet" href="assets/css/style.min.css">
 	<link rel="stylesheet" href="assets/css/modules.css">
 
+  <link rel="stylesheet" href="../libs/font-awesome/css/font-awesome.min.css">
+  <link href="../css/bootstrap.min.css" rel="stylesheet">
+  <link href="../css/styles.css" rel="stylesheet">
+
 	<!-- Canonical URL usage -->
 	<link rel="canonical" href="https://aperitif.io/">
+  <link rel="stylesheet" href="../libs/font-awesome/css/font-awesome.min.css">
+  <link href="../../css/bootstrap.min.css" rel="stylesheet">
+  <link href="../../css/styles.css" rel="stylesheet">
+
 
 	<!-- Facebook Open Graph -->
 	<meta property="og:url"                content="https://aperitif.io/" />
@@ -50,15 +58,38 @@
 
 <body class="modern">
 
+  <div id="mobile-menu-open" class="shadow-large">
+    <i class="fa fa-bars" aria-hidden="true"></i>
+</div>
+<!-- End #mobile-menu-toggle -->
+<header>
+    <div id="mobile-menu-close">
+        <span>Close</span> <i class="fa fa-times" aria-hidden="true"></i>
+    </div>
+    <ul id="menu" class="shadow nsExBold">
+      <li>
+          <a class="nsExBold" href="../../index.html">Home</a>
+      </li>
+      <li>
+          <a class="nsExBold" href="../vrflight/vrflight.html">VRFlight</a>
+      </li>
+      <li>
+          <a class="nsExBold" href="../flightcontroller/flightcontroller.html">Flight Controller</a>
+      </li>
+    </ul>
+</header>
+<!-- End header -->
+
+
+
 <!--
 START MODULE AREA 1: Hero 1
 -->
-<section class="MOD_HERO" style="background-image:url(images/vrflight.PNG)">
+<section class="MOD_HERO" style="background-image:url(../images/vrflight.PNG)">
   <div data-layout="_r">
     <div data-layout="de10">
-      <h1>Hero Area</h1>
-      <h3>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</h3>
-      <a href="#" class="btn">Read more</a>
+      <h1>고정익 무인항공기<br> 수평자세제어 시스템</h1>
+      <h3>Arduino Uno에 탑재 가능한 고정익 항공기 수평자세제어 시스템</h3>
     </div>
   </div>
 </section>
@@ -69,7 +100,7 @@ END MODULE AREA 1: Hero 1
 <!--
 START MODULE AREA 2: Menu 1
 -->
-<section class="MOD_MENU" data-theme="_bgp">
+<!--section class="MOD_MENU" data-theme="_bgp">
   <div data-layout="_r" class="nopadding">
     <nav class="MOD_MENU_Nav">
       <p class="MOD_MENU_Title">Menu</p>
@@ -122,7 +153,7 @@ START MODULE AREA 2: Menu 1
       </ul>
     </nav>
   </div>
-</section>
+</section-->
 <!--
 END MODULE AREA 2: Menu 1
 -->
@@ -183,8 +214,9 @@ END MODULE AREA 3: Image | Text | Text
   END MODULE AREA 4: Text | Text
 -->
 
+
 <!--
-START MODULE AREA 5: Image | Text | Text
+START MODULE AREA 3: Image | Text | Text
 -->
 <section>
   <div data-layout="_r">
@@ -202,8 +234,9 @@ START MODULE AREA 5: Image | Text | Text
   </div>
 </section>
 <!--
-END MODULE AREA 5: Image | Text | Text
+END MODULE AREA 3: Image | Text | Text
 -->
+
 
 <!--
 START MODULE AREA 6: Lightbox
