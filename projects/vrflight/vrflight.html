@@ -11,8 +11,8 @@
 	<link rel="stylesheet" href="assets/css/modules.css">
 
   <link rel="stylesheet" href="../libs/font-awesome/css/font-awesome.min.css">
-  <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square.css" rel="stylesheet">
   <link href="../../css/styles.css" rel="stylesheet">
+  <link href="https://hangeul.pstatic.net/hangeul_static/css/nanum-square.css" rel="stylesheet">
 
 	<!-- Canonical URL usage -->
 	<link rel="canonical" href="https://aperitif.io/">
@@ -225,6 +225,22 @@ END MODULE AREA 3: Blog Article 1
           <img class="blogImage" src="../../images/vrflight-require.png" alt="">
           <figcaption>사용자 요구사항 명세서</figcaption>
         </figure>
+
+        <p class="MOD_BLOG1_Intro" data-theme="_ts2">
+          개발 일정 기획
+         </p>
+         <p>사용자 요구사항 및 기능을 기반으로 제작된 개발 일정입니다.</p>
+         <figure>
+           <img class="blogImage" src="../../images/vrflight-wbs.png" alt="">
+           <figcaption>WBS</figcaption>
+         </figure>
+
+         <p></p>
+         <figure>
+           <img class="blogImage" src="../../images/vrflight-jira.png" alt="">
+           <figcaption>Jira Software를 이용해 이슈 관리</figcaption>
+         </figure>
+
       </div>
     </article>
   </div>
@@ -234,14 +250,7 @@ END MODULE AREA 3: Blog Article 1
   <div data-layout="_r">
     <article>
       <div class="MOD_BLOG1_Body">
-        <p class="MOD_BLOG1_Intro" data-theme="_ts2">
-         개발 일정 기획
-        </p>
-        <p>사용자 요구사항 및 기능을 기반으로 제작된 개발 일정입니다.</p>
-        <figure>
-          <img class="blogImage" src="../../images/vrflight-wbs.png" alt="">
-          <figcaption>WBS</figcaption>
-        </figure>
+        <h1>프로젝트 구조</h1>
 
         <p class="MOD_BLOG1_Intro" data-theme="_ts2">
           시스템 하드웨어 구조
@@ -261,12 +270,22 @@ END MODULE AREA 3: Blog Article 1
         </figure>
          <p>프로젝트는 VR 또는 Non-VR환경에서 시뮬레이션 엔진에 접근하고, System UI/UX를 통해 사용자와 소통합니다.<br>
           사용자는 제공된 인터페이스를 통해 시뮬레이션 Main Level에 접근할 수 있고, Main Level에서는 가상 항공기에 접근할 수 있습니다.<br>
-          가상 항공기는 사용자의 입력을 Virtual Joystick을 통해 신호를 받고, 해당 신호는 항공기의 Flight Computer에 전달됩니다. Flight Computer는 항공기를 조종하는 함수에 접근할 수 있으며, 또한 항공기의 상태를 표시하는 항공 전자장비 객체에 접근 가능합니다.<br>
+          가상 항공기는 사용자의 입력을 Virtual Joystick을 통해 신호를 받고, 해당 신호는 항공기의 Flight Computer에 전달됩니다.<br>
+          Flight Computer는 항공기를 조종하는 함수에 접근할 수 있으며, 또한 항공기의 상태를 표시하는 항공 전자장비 객체에 접근 가능합니다.<br>
           항공기 객체는 항공기의 상태를 이용해 항공기의 애니메이션 및 소리, 충돌효과를 갱신합니다.<br>
           항공 전자장비 객체는 가진 상태를 System UI/UX에 전달하여 표현합니다.<br>
           VOR객체는 Main Level에서 수행됩니다. VOR은 항공기 객체에 접근해 위치 정보를 받아와 데이터를 가공하고, System UI/UX를 통해 사용자에게 전달됩니다. </p>
 
-
+          <p class="MOD_BLOG1_Intro" data-theme="_ts2">
+            Flowchart를 이용한 로직 구성
+           </p>
+           <figure>
+            <img class="blogImage" src="../../images/vrflight-fchart.png" alt="">
+            <figcaption>Player View System Flowchart</figcaption>
+          </figure>
+          <p>플레이어의 1인칭 및 3인칭 시점을 결정하는 Flowchart 예시입니다.<br>
+            Flowchart를 구성하여 실제 코드를 작성하기 이전에 로직을 구현했습니다.
+          </p>
       </div>
     </article>
   </div>
