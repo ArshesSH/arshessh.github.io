@@ -242,6 +242,31 @@ END MODULE AREA 3: Blog Article 1
           <img class="blogImage" src="../../images/vrflight-wbs.png" alt="">
           <figcaption>WBS</figcaption>
         </figure>
+
+        <p class="MOD_BLOG1_Intro" data-theme="_ts2">
+          시스템 하드웨어 구조
+         </p>
+         <figure>
+          <img class="blogImage" src="../../images/vrflight-hw.jpg" alt="">
+          <figcaption>하드웨어 구조도</figcaption>
+        </figure>
+         <p>사용자는 PC에서 입출력 도구 또는 VR장치를 통해 시뮬레이터에 접근할 수 있습니다. </p>
+
+         <p class="MOD_BLOG1_Intro" data-theme="_ts2">
+          시스템 소프트웨어 구조
+         </p>
+         <figure>
+          <img class="blogImage" src="../../images/vrflight-sw.jpg" alt="">
+          <figcaption>소프트웨어 구조도</figcaption>
+        </figure>
+         <p>프로젝트는 VR 또는 Non-VR환경에서 시뮬레이션 엔진에 접근하고, System UI/UX를 통해 사용자와 소통합니다.<br>
+          사용자는 제공된 인터페이스를 통해 시뮬레이션 Main Level에 접근할 수 있고, Main Level에서는 가상 항공기에 접근할 수 있습니다.<br>
+          가상 항공기는 사용자의 입력을 Virtual Joystick을 통해 신호를 받고, 해당 신호는 항공기의 Flight Computer에 전달됩니다. Flight Computer는 항공기를 조종하는 함수에 접근할 수 있으며, 또한 항공기의 상태를 표시하는 항공 전자장비 객체에 접근 가능합니다.<br>
+          항공기 객체는 항공기의 상태를 이용해 항공기의 애니메이션 및 소리, 충돌효과를 갱신합니다.<br>
+          항공 전자장비 객체는 가진 상태를 System UI/UX에 전달하여 표현합니다.<br>
+          VOR객체는 Main Level에서 수행됩니다. VOR은 항공기 객체에 접근해 위치 정보를 받아와 데이터를 가공하고, System UI/UX를 통해 사용자에게 전달됩니다. </p>
+
+
       </div>
     </article>
   </div>
@@ -315,28 +340,6 @@ END MODULE AREA 3: Image | Text | Text
   END MODULE AREA 4: Text | Text
 -->
 
-
-<!--
-START MODULE AREA 3: Image | Text | Text
--->
-<section>
-  <div data-layout="_r">
-    <div data-layout="ch8 ec-third">
-      <img src="https://unsplash.it/400/300/?random" alt="">
-    </div>
-    <div data-layout="ch8 ec-third">
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-    </div>
-    <div data-layout="ec-third">
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
-        dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-    </div>
-  </div>
-</section>
-<!--
-END MODULE AREA 3: Image | Text | Text
--->
 
 
 <!--
