@@ -21,6 +21,10 @@
     .nsExBold{font-family: 'NanumSquareExtraBold';}
     .nsBold{font-family: 'NanumSquareBold';}
     .nsRExBold{font-family: 'NanumSquareRoundExtraBold';}
+    .nsAcBold{font-family: 'NanumSquareAcb';}
+    .nsAcExBold{font-family: 'NanumSquareAceb';}
+    .nsAcLight{font-family: 'NanumSquareAcl';}
+    .nsAcRegular{font-family: 'NanumSquareAcr';}
 </style>
 
 <body>
@@ -34,19 +38,19 @@
         </div>
         <ul id="menu" class="shadow">
             <li>
-                <a class="nsExBold" href="#about">About</a>
+                <a class="nsAcBold" href="#education">Education</a>
             </li>
             <li>
-                <a class="nsExBold" href="#experience">Experience</a>
+                <a class="nsAcBold" href="#experience">Experience</a>
             </li>
             <li>
-                <a class="nsExBold" href="#education">Education</a>
+                <a class="nsAcBold" href="#about">About</a>
             </li>
             <li>
-                <a class="nsExBold" href="#projects">Projects</a>
+                <a class="nsAcBold" href="#projects">Projects</a>
             </li>
             <li>
-                <a class="nsExBold" href="#skills">Skills</a>
+                <a class="nsAcBold" href="#skills">Skills</a>
             </li>
             <!--li>
                 <a class="nsExBold" shref="#contact">Contact</a>
@@ -57,13 +61,25 @@
 
     <div id="lead">
         <div id="lead-content">
-            <h1>김세현</h1>
+            <h1>SaeHyeon Kim</h1>
             <h2>Software Engineer</h2>
-            <!--a href="https://arshessh.github.io/#" download="KimSaeHyeon_Portfolio" class="btn-rounded-white">Download Resume</a-->
+            <p align="left" style="color: #ffffff">
+                &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+                Jan.30,1997 / +82-10-9301-2126 / cendrillio@naver.com<br>
+                &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+                Seongbuk-gu, Seoul<br><br>
+                &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+                <a href="https://github.com/ArshesSH" target="_blank" style="color: #ffffff">
+                    <i class="fa fa-github" aria-hidden="true">
+                        <u>GitHub Repository</u>
+                    </i>
+                </a>
+            </p>
+            <!--a href="https://arshessh.github.io/#" download="Resume_SaeHyeon_Kim" class="btn-rounded-white">Download Resume</a-->
         </div>
         <!-- End #lead-content -->
 
-        <div id="lead-overlay"></div>
+        <!--div id="lead-overlay"></div-->
 
         <div id="lead-down">
             <span>
@@ -74,37 +90,71 @@
     </div>
     <!-- End #lead -->
 
-    <div id="about">
-        <div class="container nsExBold">
-            <div class="row">
-                <div class="col-md-4">
-                    <h2 class="heading">About Me</h2>
-                </div>
-                <div class="col-md-8">
-                    <p>
-                        새로운 지식을 배우고 경험을 쌓기위해 노력하는 개발자
-                    </p>
-                </div>
-            </div>
+    <div id="education">
+        <h2 class="heading nsAcExBold">Education</h2>
+        <div class="education-block nsAcExBold">
+            <h3 >인하대학교 미래인재개발원</h3>
+            <span class="education-date">2022.04 - Present</span>
+            <h4>AR 인공지능 게임 프로그램 개발</h4>
+            <p class="nsAcRegular">
+                C, C++, C#, Windows API, Unity, DirectX9 학습 진행
+            </p>
+        </div>
+        <div class="education-block nsAcExBold">
+            <h3 >한서대학교</h3>
+            <span class="education-date">2016.03 - 2022.02</span>
+            <h4>항공소프트웨어공학과</h4>
+            <p class="nsAcRegular">
+                학점: 4.29 / 4.5<br>
+            </p>
+        </div>
+        <!-- End .education-block -->
+
+        <div class="education-block nsAcExBold">
+            <h3>경동고등학교</h3>
+            <span class="education-date">2012.03 - 2015.02</span>
+            <h4>자연계</h4>
+        </div>
+        <!-- End .education-block -->
+
+        <div class="education-block nsAcExBold">
+            <h3>중국 어학연수</h3>
+            <span class="education-date">2007.01 - 2008.08</span>
+            <h4>중국, 심양</h4>
+            <ul>
+                <li class="nsAcRegular">
+                    (新) HSK 5급 (2012년 10월)
+                </li>
+                <li class="nsAcRegular">
+                    (舊) HSK 7급 (2008년 8월)
+                </li>
+            </ul>
         </div>
     </div>
-    <!-- End #about -->
+    <!-- End #education -->
 
     <div id="experience" class="background-alt">
-        <h2 class="heading nsExBold">Experience</h2>
-        <div id="experience-timeline" class="nsExBold">
-            <div data-date="December 2020 – June 2021">
-                <h3>FXGear</h3>
-                <h4>프로젝트 매니저 및 보조 개발자 (계약직)</h4>
-                <p>
-                    UE4 모바일 게임 기획 및 개발 보조 업무 수행
-                </p>
-            </div>
+        <h2 class="heading nsAcExBold">Experience</h2>
+        <div id="experience-timeline" class="nsAcExBold">
             <div data-date="June 2021 – July 2021">
                 <h3>Metaworks</h3>
                 <h4>개발자 (정규직)</h4>
-                <p>
-                    모바일 AR 어플리케이션 기획 및 초안 작성 업무 수행
+                <h5 class="nsAcRegular">수행 프로젝트: Walkmate
+                <p class="nsAcRegular">
+                    <br>
+                    AR 어플리케이션 개발 기획 수행
+                </p>
+            </div>
+            <div data-date="December 2020 – June 2021">
+                <h3>FXGear</h3>
+                <h4>PM 및 개발자 (계약직)</h4>
+                <h5 class="nsAcRegular">수행 프로젝트: 다함께 369
+                <p class="nsAcRegular">
+                    <br>
+                    UE4 캐주얼 모바일 게임 기획 수행<br>
+                    Jira 및 Confluence를 활용한 기획 관리<br>
+                    마케팅 전략에 맞는 게임 장르 도출<br>
+                    UI/UX 디자인 및 개발 수행
                 </p>
             </div>
 
@@ -119,62 +169,27 @@
     </div>
     <!-- End #experience -->
 
-    <div id="education">
-        <h2 class="heading nsExBold">Education</h2>
-        <div class="education-block nsExBold">
-            <h3 >한서대학교</h3>
-            <span class="education-date">2016.03 - 2022.02</span>
-            <h4>항공소프트웨어공학과</h4>
-            <p>
-                학점: 4.29 / 4.5
-            </p>
+    <div id="about">
+        <div class="container nsAcExBold">
+            <div class="row">
+                <div class="col-md-4">
+                    <h2 class="heading">About Me</h2>
+                </div>
+                <div class="col-md-8">
+                    <p class="nsAcRegular">
+                        
+                    </p>
+                </div>
+            </div>
         </div>
-        <!-- End .education-block -->
-
-        <div class="education-block nsExBold">
-            <h3>경동고등학교</h3>
-            <span class="education-date">2012.03 - 2015.02</span>
-            <h4>자연계</h4>
-        </div>
-        <!-- End .education-block -->
-
-        <div class="education-block nsExBold">
-            <h3>중국 어학연수</h3>
-            <span class="education-date">2007.01 - 2008.08</span>
-            <h4>중국, 심양</h4>
-            <ul>
-                <li>
-                    (新) HSK 5급 (2012년 10월)
-                </li>
-                <li>
-                    (舊) HSK 7급 (2008년 8월)
-                </li>
-            </ul>
-        </div>
-        <!-- End .education-block -->
-
-        <!--div class="education-block">
-            <h3>University of Ottawa</h3>
-            <span class="education-date">Sept 2016 - Sept 2017</span>
-            <h4>Bachelor of Science in Computer Science</h4>
-            <ul>
-                <li>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </li>
-                <li>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </li>
-                <li>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                </li>
-            </ul>
-        </div -->
-        <!-- End .education-block -->
     </div>
-    <!-- End #education -->
+    <!-- End #about -->
 
-    <div id="projects" class="background-alt nsExBold">
-        <h2 class="heading nsExBold">Projects</h2>
+
+
+
+    <div id="projects" class="background-alt nsAcExBold">
+        <h2 class="heading nsAcExBold">Projects</h2>
         <div class="container">
             <div class="row">
 
@@ -185,7 +200,7 @@
                     <!-- End .project-image -->
                     <div class="project-info">
                         <h3>C언어 2D 턴제 탱크 슈팅 게임</h3>
-                        <p align="left">
+                        <p align="left" class="nsAcBold">
                             담당 역할: 프로젝트 개발<br>
                             개발 도구 및 언어: C<br>
                             프로젝트 설명: C언어만을 이용한 2D 턴제 탱크 슈팅 게임 프로젝트 입니다.
@@ -203,12 +218,12 @@
                     <!-- End .project-image -->
                     <div class="project-info">
                         <h3>VRFlight</h3>
-                        <p align="left">
+                        <p align="left" class="nsAcBold">
                             담당 역할: 프로젝트 팀장 및 개발자<br>
                             개발 도구 및 언어: UE4, C++, Blueprint, Photoshop, Blender3D<br>
                             프로젝트 설명: UE4를 이용한 VR F-16 Cockpit 시뮬레이터 개발 프로젝트입니다.
                         </p>
-                        <a href="projects/vrflight/vrflight.html" target="_blank">View Project</a>
+                        <a href="projects/vrflight/vrflight.html">View Project</a>
                     </div>
                     <!-- End .project-info -->
                 </div>
@@ -221,7 +236,7 @@
                     <!-- End .project-image -->
                     <div class="project-info">
                         <h3>고정익 무인항공기 수평자세제어 시스템</h3>
-                        <p align="left">
+                        <p align="left" class="nsAcBold">
                             담당 역할: 프로젝트 팀장 및 개발자<br>
                             개발 도구 및 언어: Arduino, C, C++<br>
                             프로젝트 설명: Arduino Uno 보드에 탑재 가능한 고정익 항공기 수평자세제어 시스템을 개발한 프로젝트입니다.
@@ -239,21 +254,13 @@
     <!-- End #projects -->
 
     <div id="skills">
-        <h2 class="heading nsExBold">Skills</h2>
+        <h2 class="heading nsAcExBold">Skills</h2>
         <h3>Programming Language</h3>
         <div class="education-block">
-            <ul align="center">
+            <ul align="center" >
                 <li>C</li>
                 <li>C#</li>
                 <li>C++</li>
-            </ul>
-        </div>
-
-        <h3>Language</h3>
-        <div class="education-block">
-            <ul align="center">
-                <li>English</li>
-                <li>中文</li>
             </ul>
         </div>
 
@@ -266,7 +273,29 @@
             </ul>
         </div>
 
-        <h3>IDE & Tool</h3>
+        <h3>Tools</h3>
+        <div class="education-block">
+            <ul align="center" >
+                <li>Jira Software</li>
+                <li>Confluence</li>
+                <li>Unreal Engine 4</li>
+                <li>Unity</li>
+                <li>Blender</li>
+            </ul>
+        </div>
+
+        <h3>Language</h3>
+        <div class="education-block">
+            <ul align="left">
+                <li style="background-color: transparent;">한국어 / 원어민</li><br>
+                <li style="background-color: transparent;">English / Medium Level (Can read and write documents)</li><br>
+                <li style="background-color: transparent;">中文 / 上级 (可以说话和读写文件。대화가 가능하고 문서를 읽고 쓸 수 있는 수준)</li>
+            </ul>
+        </div>
+
+
+
+        <!--h3>IDE & Tool</h3>
         <div class="education-block">
             <ul align="center">
                 <li>Visual Studio</li>
@@ -288,7 +317,7 @@
             <ul align="center">
                 <li>DirectX</li>
             </ul>
-        </div>
+        </div-->
     </div>
     <!-- End #skills -->
 
@@ -312,7 +341,7 @@
             <div class="row">
                 <div class="col-sm-5 copyright">
                     <p>
-                        Copyright &copy; 2021 SaeHyeon Kim
+                        Copyright &copy; 2022 SaeHyeon Kim
                     </p>
                 </div>
                 <div class="col-sm-2 top">
