@@ -59,6 +59,33 @@ const skills = [
   ['WORKFLOW', 'Git · Perforce · Jira · Confluence'],
 ]
 
+const publicBuilds = [
+  {
+    year: '2025',
+    title: 'CursorChanger',
+    description:
+      '실행 중인 프로세스와 활성 창에 따라 Windows 시스템 커서를 자동 전환하는 데스크톱 유틸리티입니다.',
+    stack: 'C++ · DirectX 12 · Dear ImGui',
+    href: 'https://github.com/ArshesSH/CursorChanger',
+  },
+  {
+    year: '2021',
+    title: 'VRFlight',
+    description:
+      'F-16 조종석의 주요 계기와 인터랙션을 구현한 Unreal Engine 기반 VR 비행 시뮬레이터입니다.',
+    stack: 'Unreal Engine 4 · C++ · Blueprint',
+    href: 'https://github.com/ArshesSH/VRFlight',
+  },
+  {
+    year: '2022',
+    title: 'Fixed-wing Flight Controller',
+    description:
+      'Arduino Uno 환경에서 고정익 항공기의 수평 자세를 제어하도록 설계한 임베디드 시스템입니다.',
+    stack: 'Arduino · C · C++',
+    href: 'https://github.com/ArshesSH/Fixed-wing_FlightController',
+  },
+]
+
 function Arrow() {
   return <span aria-hidden="true">↗</span>
 }
@@ -78,6 +105,7 @@ function App() {
           <a href="#work">Work</a>
           <a href="#experience">Experience</a>
           <a href="#about">About</a>
+          <a href="#lab">Lab</a>
         </nav>
         <a className="header-contact" href="mailto:cendrillio@naver.com">
           Contact <Arrow />
@@ -216,8 +244,41 @@ function App() {
           </div>
         </section>
 
+        <section className="lab section" id="lab">
+          <div className="section-heading compact">
+            <p className="section-index">04 / PUBLIC BUILDS</p>
+            <div>
+              <h2>직접 만들고, 공개하고, 개선합니다.</h2>
+              <p className="lab-intro">
+                실무 밖에서도 필요한 도구와 인터랙티브 시스템을 끝까지 구현하며
+                배운 것을 코드로 남깁니다.
+              </p>
+            </div>
+          </div>
+          <div className="lab-grid">
+            {publicBuilds.map((project) => (
+              <a
+                className="lab-card"
+                href={project.href}
+                target="_blank"
+                rel="noreferrer"
+                key={project.title}
+                aria-label={`${project.title} GitHub 저장소 열기`}
+              >
+                <div className="lab-card-top">
+                  <span>{project.year}</span>
+                  <Arrow />
+                </div>
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
+                <span className="lab-stack">{project.stack}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
         <section className="contact">
-          <p className="section-index">04 / LET&apos;S BUILD SOMETHING</p>
+          <p className="section-index">05 / LET&apos;S BUILD SOMETHING</p>
           <h2>
             좋은 문제를
             <br />
