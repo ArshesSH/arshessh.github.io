@@ -1,30 +1,53 @@
 const projects = [
   {
     number: '01',
-    type: 'XR · PERFORMANCE',
-    title: 'HoloLens 2 기반\n산업용 XR 클라이언트',
+    type: 'DIGITAL TWIN · CLIENT',
+    meta: '2024.12 — 2025.04 · Windows Client Developer',
+    title: 'TOPES 교통 통합\n관제 시스템',
     summary:
-      '복잡한 3D 모델을 현장에서 안정적으로 다루기 위해 기존 구조를 재설계하고, 로딩 병목을 개선했습니다.',
-    outcome: 'Unity Job System을 적용해 모델 처리 파이프라인 개선',
-    stack: ['Unity', 'C#', 'HoloLens 2', 'MRTK'],
+      'CCTV 관제와 스마트교차로, AI 교통분석을 하나의 데스크톱 경험으로 연결했습니다. 2D 편집 결과를 3D 가상 공간에 연동하고 실시간 차량·신호 데이터를 시각화했습니다.',
+    outcome: '영상 좌표의 3D 공간 변환, 교통 시뮬레이션과 지도 기반 경로·클러스터링 구현',
+    stack: ['TypeScript', 'Svelte', 'Tauri', 'Babylon.js', 'OpenLayers'],
   },
   {
     number: '02',
-    type: 'EMBEDDED · RELIABILITY',
-    title: '항공기 HUMS\n데이터 처리 시스템',
+    type: 'MOBILE AR · SIMULATION',
+    meta: '2024.10 — 2024.12 · Android Client Developer',
+    title: '표준작전절차 기반\nAR 화재진압 훈련',
     summary:
-      '2만 줄 이상의 단일 파일 시스템을 객체지향 구조와 멀티스레드 파이프라인으로 처음부터 재설계했습니다.',
-    outcome: '데이터 유실 자동 감지·재요청 구현, 전 장비 수락시험 통과',
-    stack: ['C++', 'Linux', 'UDP', 'Multithreading'],
+      '실제 화재 대응 절차를 모바일 AR에서 반복 훈련할 수 있도록 Unreal Engine 5 기반 교육 시나리오와 클라이언트 기능을 구현했습니다.',
+    outcome: 'FSM 시나리오 액터, 소방호스 상호작용, 퀴즈·PDF 뷰어를 포함한 훈련 UI 제작',
+    stack: ['Unreal Engine 5', 'C++', 'Android', 'AR', 'FSM'],
   },
   {
     number: '03',
-    type: 'GAME · TOOLS',
-    title: 'AAA 신작 프로젝트\n게임 UI 개발',
+    type: 'EMBEDDED · RELIABILITY',
+    meta: '2023.06 — 2023.12 · SBC Software Engineer',
+    title: 'LAND400 HUMS\n상태감시 시스템',
     summary:
-      '자체 엔진의 처리 흐름을 분석해 캐릭터 전환 퀵슬롯과 월드맵 오브젝트 밀도 시각화 기능을 구현했습니다.',
-    outcome: '디버깅 효율을 높이는 월드맵 시각화 도구 제공',
-    stack: ['C++', 'Custom Engine', 'UI', 'Data Visualization'],
+      '기존 단일 파일 중심의 SBC 소프트웨어를 재설계하고 데이터 수집·정제·저장을 분리한 처리 파이프라인으로 구현했습니다.',
+    outcome: 'UDP 패킷 검사·복구 시스템 구현 및 정적·동적 소프트웨어 검사 통과',
+    stack: ['C', 'Linux', 'UDP', 'Multithreading', 'Embedded'],
+  },
+  {
+    number: '04',
+    type: 'MIXED REALITY · PERFORMANCE',
+    meta: '2023.12 — 2024.05 · HoloLens 2 Client Developer',
+    title: 'AWAS-XR\n공정 교육 저작도구',
+    summary:
+      'HoloLens 2에서 공정 교육 시나리오를 제작하고 실행하는 MR 클라이언트를 개발하며 UI와 3D 상호작용 구조를 개선했습니다.',
+    outcome: 'Unity Job System 기반 모델 로딩 개선, Grab 시스템과 HoloLens용 Outline Shader 구현',
+    stack: ['Unity', 'C#', 'HoloLens 2', 'Job System', 'Shader'],
+  },
+  {
+    number: '05',
+    type: 'GAME · TOOLS',
+    meta: '2023.03 — 2023.05 · Gameplay UI Intern',
+    title: '펄어비스 신작\n게임플레이 UI',
+    summary:
+      '자체 엔진의 UI 처리 흐름을 파악해 캐릭터·장비 전환용 원형 퀵슬롯을 구현하고 기존 게임플레이 UI를 개선했습니다.',
+    outcome: '적 체력, 인벤토리, 탑승물 UI 개선과 개발 지원용 월드맵 시각화 기능 구현',
+    stack: ['C++', 'HTML', 'CSS', 'Custom Engine', 'Game UI'],
   },
 ]
 
@@ -162,6 +185,7 @@ function App() {
                 <div className="project-number">{project.number}</div>
                 <div className="project-content">
                   <p className="project-type">{project.type}</p>
+                  <p className="project-meta">{project.meta}</p>
                   <h3>
                     {project.title.split('\n').map((line) => (
                       <span key={line}>{line}</span>

@@ -275,6 +275,14 @@ nav a:hover,
   color: #536312;
 }
 
+.project-meta {
+  margin: 0.65rem 0 0;
+  color: #73796d;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+}
+
 .project-content h3 {
   margin: 1.4rem 0 2rem;
   font-size: clamp(2.3rem, 4.6vw, 4.8rem);
