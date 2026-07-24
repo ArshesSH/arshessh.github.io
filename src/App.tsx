@@ -164,7 +164,6 @@ function App() {
 
       <main id="main">
         <section className="hero" id="top">
-          <div className="hero-grid" aria-hidden="true" />
           <p className="eyebrow">
             <span className="status-dot" /> SEOUL · REAL-TIME 3D · INTERACTIVE
             SYSTEMS
@@ -229,9 +228,6 @@ function App() {
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
-                </div>
-                <div className="project-mark" aria-hidden="true">
-                  {project.number}
                 </div>
               </article>
             ))}
