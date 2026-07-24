@@ -1,8 +1,28 @@
 const projects = [
   {
     number: '01',
+    type: 'ANDROID AR · PERFORMANCE',
+    meta: '2025.11 — 2026.03 · OASIS STUDIO · Client Developer',
+    title: '현장용 AR 지하 배관\n증강 클라이언트',
+    summary:
+      '위경도·고도 기반 지하 배관을 사용자 GPS 기준 월드 좌표에 배치하고, 현재 위치 주변 100m 청크만 AssetBundle로 갱신 로딩하는 Android AR 클라이언트를 구현했습니다.',
+    outcome: 'Galaxy Tab S7에서 Sentis Depth 추론 성능을 1 FPS 수준에서 30 FPS 수준으로 개선',
+    stack: ['Unity', 'C#', 'AR Foundation', 'Sentis', 'AssetBundle'],
+  },
+  {
+    number: '02',
+    type: 'VR · FULL BODY TRACKING',
+    meta: '2026.05 — 2026.07 · 2-PERSON TEAM · VR Client Developer',
+    title: 'VR 태권도 1:1\n대전 프로그램',
+    summary:
+      'Pico 4 Ultra 두 대와 관전·리슨 서버 PC를 연결해 풀 바디트래킹, GAS 전투 시스템, 절차적 피격 애니메이션과 대전 HUD를 구현했습니다.',
+    outcome: '24개 본 Transform을 30Hz로 공유하고 원격 스냅샷 보간 적용 · 현장 전체 흐름 테스트 완료',
+    stack: ['Unreal Engine 5.6', 'C++', 'Pico SDK', 'GAS', 'Control Rig'],
+  },
+  {
+    number: '03',
     type: 'DIGITAL TWIN · CLIENT',
-    meta: '2024.12 — 2025.04 · Windows Client Developer',
+    meta: '2024.06 — 2025.04 · STANS · Windows Client Developer',
     title: 'TOPES 교통 통합\n관제 시스템',
     summary:
       'CCTV 관제와 스마트교차로, AI 교통분석을 하나의 데스크톱 경험으로 연결했습니다. 2D 편집 결과를 3D 가상 공간에 연동하고 실시간 차량·신호 데이터를 시각화했습니다.',
@@ -10,48 +30,35 @@ const projects = [
     stack: ['TypeScript', 'Svelte', 'Tauri', 'Babylon.js', 'OpenLayers'],
   },
   {
-    number: '02',
+    number: '04',
+    type: 'EMBEDDED · RELIABILITY',
+    meta: '2023.06 — 2023.12 · DANAM SYSTEMS · SBC Software Engineer',
+    title: 'LAND400 HUMS\n상태감시 시스템',
+    summary:
+      '1만 줄 이상 단일 파일 중심의 SBC 소프트웨어를 재설계하고 데이터 수신·정제·저장을 멀티프로세스와 Message Queue 기반 파이프라인으로 구현했습니다.',
+    outcome: 'UDP 누락 감지·자동 재요청 구현 · MISRA C 정적·동적 검사와 전 장비 수락시험 통과',
+    stack: ['C', 'Linux', 'Message Queue', 'UDP', 'Embedded'],
+  },
+  {
+    number: '05',
     type: 'MOBILE AR · SIMULATION',
-    meta: '2024.10 — 2024.12 · Android Client Developer',
+    meta: '2024.10 — 2024.12 · STANS · Android Client Developer',
     title: '표준작전절차 기반\nAR 화재진압 훈련',
     summary:
       '실제 화재 대응 절차를 모바일 AR에서 반복 훈련할 수 있도록 Unreal Engine 5 기반 교육 시나리오와 클라이언트 기능을 구현했습니다.',
     outcome: 'FSM 시나리오 액터, 소방호스 상호작용, 퀴즈·PDF 뷰어를 포함한 훈련 UI 제작',
     stack: ['Unreal Engine 5', 'C++', 'Android', 'AR', 'FSM'],
   },
-  {
-    number: '03',
-    type: 'EMBEDDED · RELIABILITY',
-    meta: '2023.06 — 2023.12 · SBC Software Engineer',
-    title: 'LAND400 HUMS\n상태감시 시스템',
-    summary:
-      '기존 단일 파일 중심의 SBC 소프트웨어를 재설계하고 데이터 수집·정제·저장을 분리한 처리 파이프라인으로 구현했습니다.',
-    outcome: 'UDP 패킷 검사·복구 시스템 구현 및 정적·동적 소프트웨어 검사 통과',
-    stack: ['C', 'Linux', 'UDP', 'Multithreading', 'Embedded'],
-  },
-  {
-    number: '04',
-    type: 'MIXED REALITY · PERFORMANCE',
-    meta: '2023.12 — 2024.05 · HoloLens 2 Client Developer',
-    title: 'AWAS-XR\n공정 교육 저작도구',
-    summary:
-      'HoloLens 2에서 공정 교육 시나리오를 제작하고 실행하는 MR 클라이언트를 개발하며 UI와 3D 상호작용 구조를 개선했습니다.',
-    outcome: 'Unity Job System 기반 모델 로딩 개선, Grab 시스템과 HoloLens용 Outline Shader 구현',
-    stack: ['Unity', 'C#', 'HoloLens 2', 'Job System', 'Shader'],
-  },
-  {
-    number: '05',
-    type: 'GAME · TOOLS',
-    meta: '2023.03 — 2023.05 · Gameplay UI Intern',
-    title: '펄어비스 신작\n게임플레이 UI',
-    summary:
-      '자체 엔진의 UI 처리 흐름을 파악해 캐릭터·장비 전환용 원형 퀵슬롯을 구현하고 기존 게임플레이 UI를 개선했습니다.',
-    outcome: '적 체력, 인벤토리, 탑승물 UI 개선과 개발 지원용 월드맵 시각화 기능 구현',
-    stack: ['C++', 'HTML', 'CSS', 'Custom Engine', 'Game UI'],
-  },
 ]
 
 const experience = [
+  {
+    period: '2025.09 — PRESENT',
+    company: 'OASIS STUDIO',
+    role: 'AI Lab · 연구원',
+    description:
+      'Unity 기반 현장용 Android AR 클라이언트와 Unreal Engine 5.6 기반 Pico VR 클라이언트 개발',
+  },
   {
     period: '2023.12 — 2025.04',
     company: 'STANS',
@@ -76,10 +83,30 @@ const experience = [
 ]
 
 const skills = [
-  ['REAL-TIME 3D', 'Unreal Engine · Unity · Babylon.js'],
+  ['REAL-TIME 3D', 'Unreal Engine 4/5 · Unity · Babylon.js · Proprietary Engine'],
   ['PROGRAMMING', 'C++ · C# · C · TypeScript'],
-  ['SPECIALTY', 'XR · Digital Twin · Game UI · Embedded Linux'],
+  ['XR & VISION', 'Pico SDK · AR Foundation · ARCore · Sentis · Control Rig'],
+  ['SYSTEMS', 'GAS · Replication · Linux · Message Queue · UDP'],
+  ['CLIENT STACK', 'Svelte · Tauri · OpenLayers · Tailwind CSS'],
   ['WORKFLOW', 'Git · Perforce · Jira · Confluence'],
+]
+
+const education = [
+  {
+    period: '2024.09 — PRESENT',
+    school: '홍익대학교 영상·커뮤니케이션대학원',
+    detail: 'VR·AR콘텐츠 전공 · 석사 재학',
+  },
+  {
+    period: '2016.03 — 2022.02',
+    school: '한서대학교',
+    detail: '항공소프트웨어공학과 · 학사 · GPA 4.29 / 4.5',
+  },
+  {
+    period: '2022.04 — 2023.02',
+    school: '인하대학교 미래인재개발원',
+    detail: 'AR 인공지능 게임 개발 과정',
+  },
 ]
 
 const publicBuilds = [
@@ -149,13 +176,14 @@ function App() {
           </h1>
           <div className="hero-bottom">
             <p className="hero-intro">
-              게임부터 XR, 디지털 트윈까지.
-              <br />
-              현실의 복잡한 문제를 <strong>인터랙티브 시스템</strong>으로
-              해결합니다.
+            게임부터 XR, 디지털 트윈까지.
+            <br />
+              모바일 AR부터 네트워크 VR까지 <strong>현장에서 작동하는 3D 클라이언트</strong>를
+              만듭니다.
             </p>
             <div className="hero-meta">
               <span>김새현 / KIM SAEHYEON</span>
+              <span>OASIS STUDIO · AI LAB</span>
               <span>PORTFOLIO 2026</span>
             </div>
           </div>
@@ -173,9 +201,9 @@ function App() {
               작동하는 경험으로.
             </h2>
             <p>
-              서로 다른 산업과 실행 환경에서 구조를 파악하고,
+              모바일 AR, 네트워크 VR, 디지털 트윈과 임베디드 환경에서,
               <br />
-              병목을 찾아 끝까지 작동하는 결과를 만들었습니다.
+              구현뿐 아니라 성능·동기화·신뢰성 문제까지 해결했습니다.
             </p>
           </div>
 
@@ -227,6 +255,18 @@ function App() {
               </article>
             ))}
           </div>
+          <div className="education-block">
+            <p className="section-index">EDUCATION</p>
+            <div className="education-list">
+              {education.map((item) => (
+                <article key={item.school}>
+                  <p>{item.period}</p>
+                  <h3>{item.school}</h3>
+                  <span>{item.detail}</span>
+                </article>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section className="about section" id="about">
@@ -241,13 +281,14 @@ function App() {
           <div className="about-grid">
             <div className="about-copy">
               <p>
-                저는 새로운 기술을 적용하는 것보다, 시스템이 왜 느리고 불안정한지
-                먼저 파악합니다. 낯선 엔진과 도메인에서도 데이터의 흐름과 책임
-                경계를 찾아 유지보수 가능한 구조로 바꾸는 일을 좋아합니다.
+                Unity와 Unreal Engine, 자체 엔진, Babylon.js 환경에서 AR·VR·XR,
+                디지털 트윈과 게임 UI를 구현해왔습니다. 현재는 오아시스스튜디오
+                AI Lab에서 현장용 AR 및 VR 클라이언트를 개발하고 있습니다.
               </p>
               <p>
-                게임, 방산, XR, 디지털 트윈에서 쌓은 경험을 연결해 현실과 가상
-                세계가 자연스럽게 상호작용하는 제품을 만듭니다.
+                기능 구현에 그치지 않고 모바일 AI 추론 성능, 네트워크 동기화,
+                위치 기반 데이터 로딩과 임베디드 통신 신뢰성처럼 실제 실행
+                환경에서 발생하는 문제를 분석하고 개선합니다.
               </p>
               <a
                 className="text-link"

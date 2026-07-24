@@ -389,6 +389,48 @@ nav a:hover,
   line-height: 1.75;
 }
 
+.education-block {
+  display: grid;
+  margin-top: clamp(4rem, 7vw, 7rem);
+  grid-template-columns: 1fr 3fr;
+  gap: 2rem;
+}
+
+.education-list {
+  border-top: 1px solid var(--line);
+}
+
+.education-list article {
+  display: grid;
+  padding: 1.5rem 0;
+  grid-template-columns: 0.85fr 1.6fr 1fr;
+  gap: 1.5rem;
+  align-items: baseline;
+  border-bottom: 1px solid var(--line);
+}
+
+.education-list p,
+.education-list h3,
+.education-list span {
+  margin: 0;
+}
+
+.education-list p {
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+}
+
+.education-list h3 {
+  font-size: 1rem;
+}
+
+.education-list span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .about-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -626,6 +668,15 @@ footer a {
   .timeline-item {
     grid-template-columns: 1fr;
     gap: 0.65rem;
+  }
+
+  .education-block,
+  .education-list article {
+    grid-template-columns: 1fr;
+  }
+
+  .education-list article {
+    gap: 0.6rem;
   }
 
   .timeline-description {
