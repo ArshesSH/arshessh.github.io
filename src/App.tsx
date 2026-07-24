@@ -116,7 +116,8 @@ function App() {
         <section className="hero" id="top">
           <div className="hero-grid" aria-hidden="true" />
           <p className="eyebrow">
-            <span className="status-dot" /> SEOUL · AVAILABLE FOR NEW CHALLENGES
+            <span className="status-dot" /> SEOUL · REAL-TIME 3D · INTERACTIVE
+            SYSTEMS
           </p>
           <h1>
             REAL-TIME
