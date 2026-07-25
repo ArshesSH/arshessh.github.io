@@ -350,13 +350,22 @@ function getRoute() {
 }
 
 function getYoutubeEmbedUrl(url: string) {
-  const parsed = new URL(url)
-  const videoId = parsed.hostname.includes('youtu.be') ? parsed.pathname.slice(1) : parsed.searchParams.get('v')
-  if (!videoId) return null
-  const start = parsed.searchParams.get('t')?.match(/\d+/)?.[0]
-  const params = new URLSearchParams({ rel: '0', modestbranding: '1' })
-  if (start) params.set('start', start)
-  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`
+  try {
+    const parsed = new URL(url)
+    const isShortUrl = parsed.protocol === 'https:' && parsed.hostname === 'youtu.be'
+    const isYoutubeUrl = parsed.protocol === 'https:' && ['youtube.com', 'www.youtube.com'].includes(parsed.hostname)
+    if (!isShortUrl && !isYoutubeUrl) return null
+
+    const videoId = isShortUrl ? parsed.pathname.slice(1) : parsed.searchParams.get('v')
+    if (!videoId || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) return null
+
+    const start = parsed.searchParams.get('t')?.match(/^\d+/)?.[0]
+    const params = new URLSearchParams({ rel: '0', modestbranding: '1' })
+    if (start) params.set('start', start)
+    return `https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`
+  } catch {
+    return null
+  }
 }
 
 function Header({ project, onDownload }: { project?: boolean; onDownload: () => void }) {
@@ -509,7 +518,7 @@ function ProjectPage({ project, onDownload }: { project: Project; onDownload: ()
 
         {youtubeEmbedUrl && <section className="project-video section">
           <div className="project-video-heading"><p className="section-index">PROJECT VIDEO</p><p>프로젝트 설명에 앞서 주요 플레이 장면을 확인할 수 있습니다. <a className="project-video-link" href={project.youtube} target="_blank" rel="noreferrer">YouTube에서 보기 <Arrow /></a></p></div>
-          <div className="project-video-frame"><iframe src={youtubeEmbedUrl} title={`${project.title} YouTube 영상`} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
+          <div className="project-video-frame"><iframe src={youtubeEmbedUrl} title={`${project.title} YouTube 영상`} loading="lazy" allow="encrypted-media; picture-in-picture; web-share" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
         </section>}
 
         {project.images && <section className="project-media section">
