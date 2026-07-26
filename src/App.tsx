@@ -587,6 +587,10 @@ function ProfileSection() {
           <p className="section-index">CAPABILITIES</p>
           {['Unreal Engine 4/5 · Unity · Babylon.js', 'C++ · C# · C · TypeScript', 'Pico SDK · AR Foundation · Sentis · GAS', 'SvelteKit · Tauri · OpenLayers · GIS', 'Linux · UDP · Message Queue · Win32 API', 'Blender · Jira · Confluence · Perforce'].map((item) => <span key={item}>{item}</span>)}
         </div>
+        <div className="personal-lab">
+          <p className="section-index">PERSONAL LAB</p>
+          <p><strong>Local LLM & AI Agent</strong><span>Strix Halo 기반 로컬 LLM 환경을 운영하며 모델별 실행 설정과 개인 비서·AI 보조 개발 워크플로를 실험하고 있습니다.</span></p>
+        </div>
       </div>
     </section>
   )
