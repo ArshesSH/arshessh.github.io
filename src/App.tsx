@@ -36,14 +36,15 @@ const projects: Project[] = [
     role: 'VR Client Developer',
     team: '2-PERSON TEAM · PC 관전/리슨 서버',
     stack: ['Unreal Engine 5.6', 'C++', 'PICO SDK', 'GAS', 'Control Rig', 'UMG'],
-    context: 'PICO 4 Ultra 2대와 PC 1대를 연결해 두 명의 플레이어가 VR로 대전하고, PC에서 경기를 관전하는 대회용 프로그램을 개발했습니다. 2026년 7월 16일까지 개발하고 대회 전 전달·검수를 진행했지만, 7월 19일 대회에서는 실제 운영에 사용되지 않았습니다.',
-    challenge: 'PICO SDK에서 수집한 24개 관절 Transform을 네트워크로 공유하면서 전투 상태와 원격 캐릭터의 움직임을 함께 유지해야 했습니다. 현장에서는 카메라 이동, IK 역관절, 발차기 판정 범위, 최초 설치 시 네트워크 연결 등 운영 이슈도 확인했습니다.',
+    context: 'PICO 4 Ultra 2대와 PC 1대를 연결해 두 명의 플레이어가 VR로 대전하고, PC에서 경기를 관전하는 대회용 프로그램을 개발했습니다. 2026년 7월 16일까지 개발을 마치고 대회 전 전달·검수를 진행했습니다.',
+    challenge: 'PICO SDK에서 수집한 24개 관절 Transform을 네트워크로 공유하면서 전투 상태와 원격 캐릭터의 움직임을 함께 유지해야 했습니다. 관전 카메라 추적, 발차기 판정 범위 등 현장 테스트에서 드러나는 세부 이슈에도 대응해야 했습니다.',
     approach: [
       'PICO SDK 관절 데이터를 Control Rig의 FK/IK 구조에 적용하고 사용자 키 입력 기반 신체 크기 보정을 구현했습니다.',
       '24개 관절 Transform을 30Hz로 공유하고 원격 클라이언트에 스냅샷 보간을 적용했으며, UDP Broadcast 기반 LAN 서버 검색과 자동 연결을 구성했습니다.',
       'GAS와 GameplayTag로 충돌 부위·속도 기반 데미지와 전투 상태를 처리하고, 절차적 피격 애니메이션·대전 HUD·최종 통합·패키징을 담당했습니다.',
+      '현장 테스트에서 확인된 관전 카메라 추적 이슈를 방향·추적 대상 로직 정리로 대응했습니다.',
     ],
-    results: ['PICO 2대와 관전 PC를 연결한 전체 경기 흐름을 현장에서 장애 없이 테스트', '대회 전 프로그램 전달과 담당자 검수 진행; 실제 대회 운영 성과로는 표현하지 않음', '네트워크 상태가 좋지 않을 때의 움직임 끊김과 현장 운영 이슈를 확인해 피드백으로 정리'],
+    results: ['PICO 2대와 관전 PC를 연결한 전체 경기 흐름을 현장에서 테스트', '대회 전 프로그램 전달 및 담당자 검수 완료; 실제 대회 운영에는 사용되지 않음'],
   },
   {
     slug: 'ar-underground-pipeline',
@@ -53,26 +54,26 @@ const projects: Project[] = [
     period: '2025.11 — 2026.03',
     title: '현장용 AR 지하 배관 증강 클라이언트',
     shortTitle: 'AR 지하 배관',
-    summary: '실제 지하 배관의 위경도·고도 데이터를 AR 공간에 배치하고, Sentis Depth estimation과 커스텀 셰이더로 지하 배관을 가리는 Android 클라이언트.',
-    impact: 'Depth estimation 1 FPS → 30 FPS · PoC 완료',
+    summary: '실제 지하 배관의 위경도·고도 데이터를 AR 공간에 배치하고, ARCore 환경 깊이와 Unity AI Inference 기반 Depth estimation으로 지하 배관을 가리는 Occlusion을 구현한 Android 클라이언트.',
+    impact: 'Depth estimation 1 FPS → 30 FPS · PoC 완료 · 본사업 진행 중',
     role: 'Client Developer',
-    team: 'OASIS STUDIO · PM · 모델러 · GIS · CLIENT',
-    stack: ['Unity', 'C#', 'AR Foundation', 'ARCore', 'Sentis', 'AssetBundle'],
+    team: 'OASIS AIX · PM · 모델러 · GIS · CLIENT',
+    stack: ['Unity', 'C#', 'AR Foundation', 'ARCore', 'Unity AI Inference', 'Addressables'],
     context: '굴착 전에 실제 지하 배관의 위치와 깊이를 현장에서 확인할 수 있도록 위경도·고도 및 GIS 데이터를 사용자 최초 GPS 기준 Unity 월드 좌표에 배치하는 Android AR 클라이언트를 개발했습니다.',
-    challenge: '전체 GIS 데이터를 한 번에 로드하기 어려웠고, AR Foundation 기본 Occlusion만으로는 지하·지상 오브젝트를 자연스럽게 구분하기 어려웠습니다. Galaxy Tab S7에서는 Sentis Depth estimation 처리 속도도 약 1 FPS에 머물렀습니다.',
+    challenge: '전체 GIS 데이터를 한 번에 로드하기 어려웠고, AR Foundation 기본 Occlusion만으로는 지하·지상 오브젝트가 자연스럽게 구분되지 않았습니다. Galaxy Tab S7에서는 Unity AI Inference 기반 Depth estimation 처리 속도도 약 1 FPS에 머물렀습니다.',
     approach: [
-      'CSV 기반 배관 데이터를 읽어 100m 청크 prefab을 생성하는 Unity 에디터 스크립트와 AssetBundle 런타임 로딩을 구현했습니다.',
-      'Sentis Depth estimation으로 Depth texture를 생성하고 셰이더에서 깊이를 비교해 지하·지상 오브젝트를 구분하는 Occlusion을 구현했습니다.',
+      'CSV 기반 배관 데이터를 읽어 100m 청크 prefab을 생성하는 Unity 에디터 스크립트와 Addressables 런타임 로딩을 구현했습니다.',
+      'ARCore 환경 깊이 기반 Occlusion과 Unity AI Inference 기반 Depth estimation Occlusion을 각각 구현해 지하·지상 오브젝트를 구분했습니다.',
       '입력 해상도 축소, 추론 주기 조절, 이전·현재 Depth texture 보간, 거리 기반 디더링 셰이더를 적용했습니다.',
     ],
-    results: ['Galaxy Tab S7에서 Depth estimation 처리 흐름을 약 1 FPS에서 30 FPS 수준으로 개선', '주변 100m 청크만 로드하는 구조와 커스텀 Occlusion 구현', '현장 검증을 포함한 PoC 완료 및 본사업 체결 진행'],
+    results: ['Galaxy Tab S7에서 Depth estimation 처리 흐름을 약 1 FPS에서 30 FPS 수준으로 개선', '주변 100m 청크만 로드하는 구조와 ARCore 환경 깊이·Unity AI Inference 기반 Occlusion을 각각 구현했으며, 최종 제품에는 ARCore 환경 깊이 기반 Occlusion만 채택', '현장 검증을 포함한 PoC 완료 및 본사업 체결 후 진행 중'],
   },
   {
     slug: 'traffic-integrated-control',
     group: 'company',
     number: '03',
     category: 'DIGITAL TWIN · CLIENT',
-    period: '2024.04 — 2025.05 · 커밋 기준',
+    period: '2024.06 — 2025.04',
     title: 'TOPES 통합 교통 관제 시스템',
     shortTitle: 'TOPES 교통 관제',
     summary: '스마트교차로 편집부터 VDS 차량 시각화·교통 분석까지 연결한 Windows 디지털 트윈 클라이언트.',
@@ -85,7 +86,7 @@ const projects: Project[] = [
     approach: [
       '교차로 영역·도로·차선·CCTV·신호등 배치와 저장을 지원하는 Unity 스마트교차로 편집 시스템을 기획 문서 기반으로 단독 구현했습니다.',
       'GIS 좌표와 Unity 좌표를 변환하고 VDS 패킷을 차량 표시·이동에 연결했으며, 검지 손실 차량은 작성된 차선 추적 경로를 따라 이동하도록 구성했습니다.',
-      'SvelteKit·Babylon.js 전환 이후 2D 편집, 3D 차량·신호등, 교통 분석, 차량 재생, 시뮬레이션 요청·결과 처리를 담당했습니다.',
+      'SvelteKit·Babylon.js 전환 이후에는 2D 편집, 3D 차량·신호등, 교통 분석, 차량 재생, 시뮬레이션 요청·결과 처리까지 맡았습니다.',
     ],
     results: ['기획 문서에서 출발해 스마트교차로 생성·편집·저장 흐름을 단독 구현', 'VDS 차량 데이터를 지도·3D 관제 화면에 표시하고 검지 손실 차량의 차선 추적 구현', '클라이언트 기술 전환 이후 교통 분석·차량 재생·시뮬레이션 연동 기능 구현'],
     images: [
@@ -98,18 +99,18 @@ const projects: Project[] = [
     group: 'company',
     number: '04',
     category: 'MOBILE AR · SIMULATION',
-    period: '2024.10 — 2024.12',
+    period: '2024.11 — 2025.05',
     title: '표준작전절차 기반 AR 화재진압 훈련',
     shortTitle: 'AR 화재진압 훈련',
-    summary: '데이터 테이블 기반 시나리오와 FSM 진행 로직으로 소방호스 조작·퀴즈·성공/실패 분기를 제공하는 Unreal Engine 5 Android AR 훈련 앱.',
-    impact: 'DataTable·FSM 시나리오 · Galaxy Tab S8 검증',
+    summary: 'JSON 시나리오 데이터와 직접 설계한 단계 기반 진행 로직으로 화재 진압 상호작용·퀴즈·성공/실패 분기를 제공하는 Unreal Engine 5 Android AR 훈련 앱.',
+    impact: 'JSON 시나리오 · Galaxy Tab S8 검증',
     role: 'Android Client Developer',
     team: 'STANS · 3 DEV + PM + 3D ARTIST',
-    stack: ['Unreal Engine 5', 'C++', 'Android', 'AR', 'FSM', 'DataTable'],
-    context: '소방청 화재 진압 교육을 모바일 AR에서 제공하기 위한 Android 클라이언트를 Unreal Engine 5와 C++로 개발했습니다. 데이터 테이블에 정의된 훈련 단계와 퀴즈를 런타임 시나리오로 연결했습니다.',
-    challenge: '훈련 절차에 맞춰 애니메이션·이벤트·퀴즈 선택지를 순서대로 진행하고, 소방호스 조작과 교육 자료를 모바일 UI에서 제공해야 했습니다. Android Vulkan 환경에서 Niagara 이펙트가 정상 재생되지 않는 문제도 발생했습니다.',
-    approach: ['DataTable을 읽어 런타임에 시나리오 액터를 생성하고 FSM 기반 진행 흐름을 구현했습니다.', '곡선형 충돌체를 발사해 일정 시간 화재 대상과 충돌하면 불이 꺼지는 상호작용을 개발했습니다.', 'C++와 Widget Blueprint로 설정·시나리오·퀴즈·성공/실패 UI와 이미지 기반 PDF 뷰어를 제작하고, 문제가 된 Niagara 이펙트는 대체 이펙트로 교체했습니다.'],
-    results: ['Galaxy Tab S8 실기기에서 구동 확인 및 프로젝트 납품 완료', '데이터 기반 시나리오와 성공/실패 분기 구조 구현', 'Vulkan 이펙트 문제를 대체 이펙트 적용으로 대응'],
+    stack: ['Unreal Engine 5.4', 'C++', 'Android', 'AR', 'JSON'],
+    context: '소방청 화재 진압 교육을 모바일 AR에서 제공하기 위한 Android 클라이언트를 Unreal Engine 5와 C++로 개발했습니다. JSON 시나리오 데이터를 읽어 런타임에 훈련 액터를 생성하고 직접 설계한 단계 기반 진행 로직으로 연결했습니다.',
+    challenge: '훈련 절차에 맞춰 애니메이션·이벤트·퀴즈 선택지를 순서대로 진행하고, 화재 진압 상호작용과 교육 자료를 모바일 UI에서 제공해야 했습니다.',
+    approach: ['scenario.json을 UObject 그래프로 변환해 런타임에 시나리오 액터를 생성하고, 단계 번호와 완료 상태를 관리하는 진행 흐름을 직접 설계해 구현했습니다.', '곡선형 충돌체를 발사해 일정 시간 화재 대상과 충돌하면 불이 꺼지는 상호작용을 개발했습니다.', 'C++와 Widget Blueprint로 설정·시나리오·퀴즈·성공/실패 UI와 이미지 기반 PDF 뷰어를 제작했습니다.'],
+    results: ['Galaxy Tab S8 실기기에서 구동 확인 및 프로젝트 납품 완료', 'JSON 기반 시나리오와 직접 설계한 단계별 진행 흐름 및 성공/실패 분기 구조 구현'],
     images: [
       { src: '/portfolio-media/image3.png', alt: 'AR 화재진압 훈련 시뮬레이터 화면' },
       { src: '/portfolio-media/image4.png', alt: 'AR 화재진압 훈련의 화재 상호작용 화면' },
@@ -131,7 +132,7 @@ const projects: Project[] = [
     context: 'HoloLens 2에서 MR 공정 교육 시나리오를 제작하고 실행하는 Unity 클라이언트를 개발했습니다. UI, 가상 물체 조작, 대형 모델 로딩과 디바이스용 셰이더를 담당했습니다.',
     challenge: 'HoloLens 2의 입력·시야·성능 제약 안에서 UI와 3D 상호작용을 안정적으로 제공하고, 대형 모델을 로딩하는 흐름을 개선해야 했습니다.',
     approach: [
-      'Color Picker와 User Menu를 제작하고 프로젝트 전체 UI를 Physics-based 방식에서 UGUI로 전환했습니다.',
+      'Color Picker와 User Menu를 제작했고, HoloLens 2의 입력 제약 안에서 안정적으로 동작하도록 프로젝트 전체 UI를 Physics-based 방식에서 UGUI로 전환했습니다.',
       '가상공간 물체를 잡고 조작하는 Grab 시스템과 HoloLens 2용 Outline Shader를 구현했습니다.',
       'Unity Job System을 적용해 모델 로딩 병목을 개선했습니다.',
     ],
@@ -191,7 +192,7 @@ const projects: Project[] = [
     group: 'personal',
     number: '08',
     category: 'UNITY · AI · SOLO PROJECT',
-    period: '2023.01 — 2023.02',
+    period: '2022.12.12 — 2023.02.17',
     title: 'Project LUP',
     shortTitle: 'PROJECT LUP',
     summary: 'Behavior Tree 기반 자동 전투 AI와 동적 스킬·타겟 결정을 구현한 1인 방치형 RPG 프로젝트.',
@@ -199,12 +200,12 @@ const projects: Project[] = [
     role: 'Solo Developer',
     team: '1-PERSON PROJECT',
     stack: ['Unity', 'C#', 'Behavior Tree', 'Shader', 'UGUI'],
-    context: '자동 전투를 중심으로 캐릭터가 전투 상황에 따라 스킬과 타겟을 선택하는 Unity 기반 방치형 RPG를 전체 개발했습니다.',
-    challenge: '스킬 범위와 회복 필요성 등 다양한 조건에 따라 행동을 선택하면서도, MonoBehaviour가 아닌 Behavior Tree 노드의 상태를 런타임에 확인할 수 있어야 했습니다.',
+    context: '자동 전투를 중심으로 캐릭터가 전투 상황에 따라 스킬과 타겟을 선택하는 Unity 기반 방치형 RPG를 기획부터 구현까지 혼자 개발했습니다.',
+    challenge: '스킬 범위와 회복 필요성 같은 조건에 따라 행동을 선택하면서도, MonoBehaviour가 아닌 Behavior Tree 노드의 상태를 런타임에 확인할 수 있어야 했습니다.',
     approach: [
       'OnStart·OnUpdate·OnStop 흐름을 가진 Behavior Tree 노드 구조와 UGUI 기반 Behavior Tree Debugger를 구현했습니다.',
       'SkillSlot·SkillSet·SkillActionNode를 조합해 전투 상황에 따라 스킬과 공격·회복 타겟을 동적으로 결정하도록 구성했습니다.',
-      '캐릭터 수에 따른 UGUI Draw Call 증가를 줄이는 방향으로 Shader 기반 Health Bar와 전투 카메라 추적·흔들림을 구현했습니다.',
+      '캐릭터 수에 따른 UGUI Draw Call 증가를 줄이는 방향으로 Shader 기반 Health Bar와 전투 카메라 추적·흔들림을 만들었습니다.',
     ],
     results: ['전투 상황에 따른 자동 스킬·타겟 결정 흐름 구현', 'UGUI 기반 디버거로 Behavior Tree 노드 반환 상태 추적 가능', 'Shader Health Bar와 전투 카메라 시스템으로 전투 가독성과 연출 구성'],
     youtube: 'https://youtu.be/9gVlJFajaxc',
@@ -229,11 +230,11 @@ const projects: Project[] = [
     context: '퇴마사와 악령이 들린 인형 진영이 서로 다른 목표를 수행하는 5인 멀티플레이 게임을 프로그래머 3명과 기획자 5명으로 제작했습니다.',
     challenge: 'DBMS를 사용할 수 없는 환경에서 계정·접속 로그를 관리하고, Photon 플레이어 데이터와 반복 가능한 상호작용·캐스팅 구조를 공유해야 했습니다.',
     approach: [
-      'Google Sheets와 Apps Script를 이용해 계정 데이터와 접속 로그를 관리하고 JSON 기반 통신 흐름을 구성했습니다.',
+      'Google Sheets를 저장소로 하는 Apps Script 엔드포인트를 직접 작성하고, Unity 클라이언트에서 UnityWebRequest 기반 JSON 통신으로 계정 등록·로그인·로그아웃을 연동했습니다.',
       'Photon API 데이터 공유 과정을 Facade 형태의 DataManager로 래핑해 플레이어 데이터 수정·공유 흐름을 정리했습니다.',
       'IInteractable 기반 상호작용 탐색·UI 표시와 Cast·CastFuncSet 조합의 Builder 패턴 캐스팅 시스템을 구현했습니다.',
     ],
-    results: ['DBMS 없이 Google Sheets·Apps Script 기반 계정·로그 관리 흐름 구현', 'Photon 플레이어 데이터 공유와 상호작용·캐스팅 공통 시스템 구현', '기획 문서를 요구사항과 프로토타입으로 검증하며 3명의 프로그래머·5명의 기획자와 협업'],
+    results: ['DBMS 없이 Google Sheets·Apps Script 기반 계정·로그 관리 흐름을 엔드포인트부터 클라이언트까지 구현', 'Photon 플레이어 데이터 공유와 상호작용·캐스팅 공통 시스템 구현', '기획 문서를 요구사항과 프로토타입으로 검증하며 3명의 프로그래머·5명의 기획자와 협업'],
     youtube: 'https://youtu.be/p3pPeP9O2TY',
     images: [
       { src: '/portfolio-media/image28.png', alt: 'Deus Ex Machina 인게임 장면' },
@@ -258,7 +259,7 @@ const projects: Project[] = [
     challenge: '게임 루프, 렌더링, 충돌, 캐릭터 상태, 애니메이션 편집을 외부 게임 엔진 없이 하나의 구조로 연결해야 했습니다.',
     approach: [
       'Game·Scene·Camera·Actor·Behavior 등으로 구성된 자체 게임 프레임워크를 설계했습니다.',
-      'SAT로 AABB·OBB 충돌을 처리하고 FSM으로 플레이어와 적 AI 상태를 관리했습니다.',
+      'AABB 기반으로 게임 충돌을 처리하고, SAT·OBB 충돌 판정은 별도로 구현했지만 게임 로직에는 통합하지 않았습니다. FSM으로 플레이어와 적 AI 상태를 관리했습니다.',
       '스프라이트 범위·Pivot·애니메이션 프레임을 편집하고 저장하는 에디터를 제작했습니다.',
     ],
     results: ['Windows API 기반 횡스크롤 게임 플레이와 적 AI 구현', '스프라이트 애니메이션 제작·디버깅 도구 구현'],
@@ -273,7 +274,7 @@ const projects: Project[] = [
     group: 'personal',
     number: '11',
     category: 'C · CONSOLE · 2D GAME',
-    period: '2022.05.06 — 2022.05.17',
+    period: '2022.05.08 — 2022.05.18',
     title: 'Deadlock',
     shortTitle: 'DEADLOCK',
     summary: '그래픽 라이브러리 없이 BMP 이미지를 콘솔 픽셀로 출력한 C언어 2D 턴제 탱크 슈팅 게임.',
@@ -284,7 +285,7 @@ const projects: Project[] = [
     context: '웜즈와 포트리스에서 영감을 받아 콘솔 창에서 플레이하는 2D 탱크 슈팅 게임을 제작했습니다.',
     challenge: 'C언어와 콘솔 환경만으로 BMP 파일을 읽고 이미지 기반 게임 화면을 구성해야 했으며, 출력 픽셀 간격에 따라 렌더링 속도도 달라졌습니다.',
     approach: [
-      'BMP 파일을 읽어 Surface로 변환하고 콘솔 문자 하나를 픽셀처럼 사용하는 PutPixel·DrawSprite 출력 흐름을 구현했습니다.',
+      'BMP 파일을 읽어 Surface로 변환하고 콘솔 문자 하나를 픽셀처럼 사용하는 PutPixel·DrawSprite 출력 흐름을 구현했으며, 출력 픽셀 간격을 조정해 화면 해상도와 렌더링 속도의 균형을 맞췄습니다.',
       '탱크 이동, 포탄의 포물선 발사, 탱크별 데미지와 3스테이지 진행을 구성했습니다.',
       '플레이어 턴과 AI 턴을 분리하고 난이도에 따라 AI 명중률을 보정했습니다.',
     ],
@@ -304,14 +305,14 @@ const projects: Project[] = [
     title: 'VR Flight Simulation',
     shortTitle: 'VR FLIGHT',
     summary: 'F-16 조종석에서 계기비행과 착륙을 수행하는 Unreal Engine 4 기반 PC VR 항공기 시뮬레이터.',
-    impact: '비행 시스템 · 항공전자 UI · VR 조작',
+    impact: '항공전자 UI · VR 조종 상호작용 · 비행 모델 연동',
     role: 'Team Lead · Developer',
     team: '4-PERSON TEAM',
-    stack: ['Unreal Engine 4', 'C++', 'Blueprint', 'Blender', 'VR'],
-    context: '한서대학교 4인 졸업 프로젝트에서 팀장과 개발자를 맡아 F-16 조종석의 비행 시스템, 항공전자 장비, VR 상호작용을 구현했습니다.',
-    challenge: '짧은 기간 안에 간이 항공역학 계산, 비행 상태와 계기 UI의 연동, VR 조종석 상호작용과 항공기 모델·애니메이션을 함께 완성해야 했습니다.',
-    approach: ['Blueprint 중심으로 비행 시스템과 조종사·항공기 시점 카메라를 구현하고 기능 우선순위를 관리했습니다.', 'HUD, Air Speed Indicator, Altimeter, Attitude Director 등 주요 항공전자 계기와 로직을 개발했습니다.', '핸드 트래킹 기반 조종석 상호작용과 항공기 모델·애니메이션을 제작하고 Jira·Confluence로 일정과 문서를 관리했습니다.'],
-    results: ['비행 상태와 연동되는 F-16 조종석 계기 및 간이 비행 시스템 구현', 'VR 핸드 트래킹으로 항공전자 장비를 조작하는 PC VR 시뮬레이터 완성'],
+    stack: ['Unreal Engine 4', 'Blueprint', 'EasyFlightModel Plugin', 'Blender', 'VR'],
+    context: '한서대학교 4인 졸업 프로젝트에서 팀장과 개발자를 맡아 F-16 조종석의 항공전자 장비와 VR 상호작용을 구현하고, EasyFlightModel 비행 모델 플러그인을 Blueprint로 연동했습니다.',
+    challenge: '짧은 기간 안에 비행 상태와 계기 UI의 연동, VR 조종석 상호작용과 항공기 모델·애니메이션, 비행 모델 플러그인 연동을 함께 완성해야 했습니다.',
+    approach: ['HUD, Air Speed Indicator, Altimeter, Attitude Director 등 주요 항공전자 계기와 로직을 개발했습니다.', '핸드 트래킹 기반 조종석 상호작용과 항공기 모델·애니메이션을 제작하고 Jira·Confluence로 일정과 문서를 관리했습니다.', 'EasyFlightModel 플러그인의 비행 데이터 getter·조종 입력 setter를 Blueprint로 연동하고 조종사·항공기 시점 카메라를 구현했으며 기능 우선순위를 정했습니다.'],
+    results: ['VR 핸드 트래킹으로 항공전자 장비를 조작하는 PC VR 시뮬레이터 완성', 'EasyFlightModel 플러그인의 비행 데이터를 F-16 조종석 계기와 연동해 계기비행 상태를 표시'],
     youtube: 'https://youtu.be/R9U9pKLASw0?t=942',
     links: [{ label: 'GitHub Repository', href: 'https://github.com/ArshesSH/VRFlight' }],
     images: [
@@ -327,17 +328,17 @@ const projects: Project[] = [
     period: '2020.09 — 2020.12',
     title: 'Sky Stability',
     shortTitle: 'Sky Stability',
-    summary: 'Arduino와 C 기반 PID 제어로 고정익 무인항공기의 수평 자세를 제어한 4인 캡스톤 프로젝트.',
+    summary: 'Arduino와 C 기반 PID 제어로 RC 고정익 모형기의 자동 자세 보조 시스템을 구현한 4인 캡스톤 프로젝트.',
     impact: 'PID 기반 고정익 자세 제어',
     role: 'Team Lead · Software Developer',
     team: '4-PERSON TEAM',
     stack: ['Arduino', 'C', 'C++', 'PID Control'],
-    context: '한서대학교 4인 캡스톤 프로젝트에서 팀장과 소프트웨어 개발을 맡아 고정익 무인항공기의 데이터 전달 과정과 수평 자세 제어 시스템을 개발했습니다.',
-    challenge: '무인항공기 데이터 전달 과정과 자세 제어 알고리즘을 이해하고, 센서 입력과 모터 출력을 연결하는 제어 루프를 팀 단위로 완성해야 했습니다.',
-    approach: ['자세 센서 데이터를 읽어 기체의 현재 상태를 계산했습니다.', '목표 수평 자세와의 오차를 PID 제어 입력으로 사용하고 모터 출력에 반영했습니다.', '필요한 제어 원리를 학습해 팀원과 공유하며 프로젝트 진행을 관리했습니다.'],
-    results: ['Arduino 기반 센서 입력·PID 계산·모터 출력 제어 루프 구현', '고정익 무인항공기 수평 자세 제어 프로젝트 완료'],
+    context: '한서대학교 4인 캡스톤 프로젝트에서 팀장과 소프트웨어 개발을 맡아 RC 고정익 모형기의 자세 데이터 전달 과정과 자동 자세 보조 시스템을 개발했습니다.',
+    challenge: 'RC 고정익 모형기의 자세 데이터 전달 과정과 자세 제어 알고리즘을 이해하고, 센서 입력과 서보 출력을 연결하는 제어 루프를 팀 단위로 완성해야 했습니다.',
+    approach: ['자세 센서 데이터를 읽어 기체의 현재 상태를 계산했습니다.', '목표 자세와의 오차를 PID 제어 입력으로 사용하고 서보 출력에 반영했습니다.', '필요한 제어 원리를 학습해 팀원과 공유하며 프로젝트 진행을 관리했습니다.'],
+    results: ['Arduino 기반 센서 입력·PID 계산·서보 출력 제어 루프 구현', '지상 테스트로 RC 고정익 모형기의 자동 자세 보조 시스템 동작을 확인'],
     links: [{ label: 'GitHub Repository', href: 'https://github.com/ArshesSH/Fixed-wing_FlightController' }],
-    images: [{ src: '/portfolio-media/image63.png', alt: 'Sky Stability 무인항공기 시연 화면' }],
+    images: [{ src: '/portfolio-media/image63.png', alt: 'Sky Stability RC 고정익 모형기 시연 화면' }],
   },
 ]
 
@@ -548,7 +549,7 @@ function ProjectPage({ project, onDownload }: { project: Project; onDownload: ()
 }
 
 const experience = [
-  ['2025.09 — PRESENT', 'OASIS STUDIO', 'AI Lab · 연구원', 'Unity Android AR 및 Unreal Engine 5 VR 클라이언트 개발'],
+  ['2025.09 — PRESENT', 'OASIS AIX', 'AI Lab · 연구원', 'Unity Android AR 및 Unreal Engine 5 VR 클라이언트 개발'],
   ['2023.12 — 2025.04', 'STANS', '주임 연구원', 'Unity XR·디지털 트윈·Unreal Engine 5 모바일 AR·Tauri 클라이언트 개발'],
   ['2023.06 — 2023.12', 'DANAM SYSTEMS', '연구원', 'LAND400 Phase3 AS9 & AS10 HUMS 임베디드 소프트웨어 개발'],
   ['2023.03 — 2023.05', 'PEARL ABYSS', 'UI 개발 인턴', '블랙스페이스 엔진 기반 붉은사막 UI 및 디버깅 도구 구현'],
@@ -572,7 +573,7 @@ function ProfileSection() {
       <div className="profile-body">
         <div className="profile-statement">
           <p>Unity·Unreal Engine·자체 엔진·Babylon.js 환경에서 AR·VR·디지털 트윈과 게임 UI를 구현했습니다.</p>
-          <p>Sentis 추론 속도 개선, 전신 트래킹 동기화, 위치 기반 데이터 로딩, UDP 패킷 복구처럼 배포 환경에서 발생한 문제를 해결해왔습니다.</p>
+          <p>Unity AI Inference 추론 속도 개선, 전신 트래킹 동기화, 위치 기반 데이터 로딩, UDP 패킷 복구처럼 배포 환경에서 발생한 문제를 해결해왔습니다.</p>
           <p>현재 홍익대학교 영상·커뮤니케이션대학원에서 VR·AR콘텐츠를 전공하며 실시간 3D 클라이언트 개발을 확장하고 있습니다.</p>
         </div>
         <div className="experience-list">
@@ -585,7 +586,7 @@ function ProfileSection() {
         </div>
         <div className="capabilities">
           <p className="section-index">CAPABILITIES</p>
-          {['Unreal Engine 4/5 · Unity · Babylon.js', 'C++ · C# · C · TypeScript', 'Pico SDK · AR Foundation · Sentis · GAS', 'SvelteKit · Tauri · OpenLayers · GIS', 'Linux · UDP · Message Queue · Win32 API', 'Blender · Jira · Confluence · Perforce'].map((item) => <span key={item}>{item}</span>)}
+          {['Unreal Engine 4/5 · Unity · Babylon.js', 'C++ · C# · C · TypeScript', 'PICO SDK · AR Foundation · Unity AI Inference · GAS', 'SvelteKit · Tauri · OpenLayers · GIS', 'Linux · UDP · Message Queue · Win32 API', 'Blender · Jira · Confluence · Perforce'].map((item) => <span key={item}>{item}</span>)}
         </div>
       </div>
     </section>
@@ -611,7 +612,7 @@ function PrintPortfolio() {
         <div>
           <h2>실시간 3D 클라이언트 개발자 김세현입니다.</h2>
           <p>Unity·Unreal Engine·자체 엔진·Babylon.js 환경에서 AR·VR·디지털 트윈과 게임 UI를 구현했습니다.</p>
-          <p>Sentis 추론 속도 개선, 전신 트래킹 동기화, 위치 기반 데이터 로딩, UDP 패킷 복구처럼 배포 환경에서 발생한 문제를 해결해왔습니다.</p>
+          <p>Unity AI Inference 추론 속도 개선, 전신 트래킹 동기화, 위치 기반 데이터 로딩, UDP 패킷 복구처럼 배포 환경에서 발생한 문제를 해결해왔습니다.</p>
           <p>현재 홍익대학교 영상·커뮤니케이션대학원에서 VR·AR콘텐츠를 전공하며 실시간 3D 클라이언트 개발을 확장하고 있습니다.</p>
         </div>
       </section>
