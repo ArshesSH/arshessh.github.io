@@ -1,0 +1,147 @@
+import type { DiagramSpec } from '../diagrams'
+
+export const CONTENT_VERSION = 2
+
+export type ProjectGroup = 'company' | 'personal'
+export type PdfVariant = 'summary' | 'full'
+
+export interface ContentItem {
+  id: string
+  text: string
+}
+
+export interface ProjectImage {
+  id: string
+  src: string
+  caption: string
+}
+
+export interface ProjectLink {
+  id: string
+  label: string
+  href: string
+}
+
+export interface DeepDiveMedia {
+  kind: 'image' | 'video' | 'youtube'
+  src: string
+  caption: string
+}
+
+export interface DeepDiveCode {
+  label: string
+  lang: string
+  pseudo?: boolean
+  source: string
+}
+
+export interface DeepDive {
+  id: string
+  heading: string
+  body: string
+  diagram?: { spec: DiagramSpec; caption: string }
+  media?: DeepDiveMedia
+  code?: DeepDiveCode
+}
+
+export interface Project {
+  id: string
+  slug: string
+  group: ProjectGroup
+  number: string
+  category: string
+  period: string
+  title: string
+  shortTitle: string
+  summary: string
+  impact: string
+  role: string
+  team: string
+  stack: string[]
+  context: string
+  challenge: string
+  approach: ContentItem[]
+  results: ContentItem[]
+  links?: ProjectLink[]
+  youtube?: string
+  images?: ProjectImage[]
+  deepDive?: DeepDive[]
+}
+
+export interface HeroContent {
+  eyebrow: string
+  kicker: string
+  titleLead: string
+  titleAccent: string
+  titleTail: string
+  descriptionLead: string
+  descriptionAccent: string
+  descriptionTail: string
+}
+
+export interface ProfileContent {
+  headingLead: string
+  headingTail: string
+  description: string
+  statements: ContentItem[]
+  personalLabTitle: string
+  personalLabBody: string
+}
+
+export interface ExperienceItem {
+  id: string
+  period: string
+  company: string
+  role: string
+  detail: string
+}
+
+export interface EducationItem {
+  id: string
+  period: string
+  school: string
+  detail: string
+}
+
+export interface ArchiveContent {
+  heading: string
+  description: string
+  intro: string
+  companyHeading: string
+  companyDescription: string
+  personalHeading: string
+  personalDescription: string
+}
+
+export interface ContactContent {
+  heading: string
+  email: string
+}
+
+export interface PrintContent {
+  coverSummaryFull: string
+  coverSummarySummary: string
+  profileHeading: string
+  profileStatements: ContentItem[]
+  projectIndexHeading: string
+  projectIndexNote: string
+  footer: string
+}
+
+export interface PortfolioContent {
+  hero: HeroContent
+  profile: ProfileContent
+  archive: ArchiveContent
+  projects: Project[]
+  experience: ExperienceItem[]
+  education: EducationItem[]
+  capabilities: ContentItem[]
+  contact: ContactContent
+  print: PrintContent
+}
+
+export interface ContentDraft {
+  version: number
+  updatedAt: string
+  content: PortfolioContent
+}
