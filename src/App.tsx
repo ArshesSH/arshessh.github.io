@@ -3,7 +3,7 @@ import { Diagram } from './diagrams'
 import { createDefaultContent } from './content/default-content'
 import { EditorModeProvider, EditorToolbar, EditableText, useEditorMode } from './content/editor'
 import { clearReviewDraft, readReviewDraft, writeReviewDraft } from './content/review-storage'
-import type { ContentItem, EducationItem, ExperienceItem, PdfVariant, PortfolioContent, Project } from './content/types'
+import type { ContentItem, EducationItem, ExperienceItem, HeaderContent, PdfVariant, PortfolioContent, Project } from './content/types'
 
 type ContentUpdater = (updater: (content: PortfolioContent) => PortfolioContent) => void
 
@@ -45,7 +45,7 @@ function replaceTextItem(items: ContentItem[], id: string, text: string) {
   return items.map((item) => item.id === id ? { ...item, text } : item)
 }
 
-function Header({ project, email, onDownload }: { project?: boolean; email: string; onDownload: (variant: PdfVariant) => void }) {
+function Header({ project, email, content, onDownload }: { project?: boolean; email: string; content: HeaderContent; onDownload: (variant: PdfVariant) => void }) {
   return (
     <header className="site-header">
       <a className="brand" href="#/" aria-label="홈으로">SH<span>.</span></a>
@@ -54,11 +54,11 @@ function Header({ project, email, onDownload }: { project?: boolean; email: stri
       </nav>
       <div className="header-actions">
         <div className="header-pdf-group" role="group" aria-label="PDF 저장">
-          <button className="header-pdf" type="button" onClick={() => onDownload('summary')} title="전체 프로젝트를 한 장 분량으로 요약한 PDF를 저장합니다">
+          <button className="header-pdf" type="button" onClick={() => onDownload('summary')} title={content.summaryPdfTitle}>
             요약 PDF
           </button>
           <span aria-hidden="true">·</span>
-          <button className="header-pdf" type="button" onClick={() => onDownload('full')}>
+          <button className="header-pdf" type="button" onClick={() => onDownload('full')} title={content.fullPdfTitle}>
             전체 PDF <Arrow />
           </button>
         </div>
@@ -103,7 +103,7 @@ function ProjectGrid({ items, updateContent }: { items: Project[]; updateContent
 function Home({ content, updateContent, onDownload }: { content: PortfolioContent; updateContent: ContentUpdater; onDownload: (variant: PdfVariant) => void }) {
   return (
     <>
-      <Header email={content.contact.email} onDownload={onDownload} />
+      <Header content={content.header} email={content.contact.email} onDownload={onDownload} />
       <main id="main">
         <section className="hero">
           <p className="eyebrow"><span className="status-dot" /><EditableText as="span" value={content.hero.eyebrow} onChange={(value) => updateContent((current) => ({ ...current, hero: { ...current.hero, eyebrow: value } }))} ariaLabel="히어로 설명" /></p>
@@ -162,7 +162,7 @@ function ProjectsPage({ content, updateContent, onDownload }: { content: Portfol
 
   return (
     <>
-      <Header project email={content.contact.email} onDownload={onDownload} />
+      <Header project content={content.header} email={content.contact.email} onDownload={onDownload} />
       <main id="main" className="page-main">
         <section className="page-intro">
           <p className="section-index">PROJECT ARCHIVE / 2020 — 2026</p>
@@ -216,7 +216,7 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
 
   return (
     <>
-      <Header project email={content.contact.email} onDownload={onDownload} />
+      <Header project content={content.header} email={content.contact.email} onDownload={onDownload} />
       <main id="main" className="project-page">
         <section className="project-hero">
           <div className="project-kicker">

@@ -98,6 +98,12 @@ export function validateContent(value: unknown): ValidationResult {
 
   if (!isRecord(value)) return { valid: false, errors: ['콘텐츠가 객체가 아닙니다.'] }
 
+  const header = isRecord(value.header) ? value.header : null
+  if (!header) errors.push('header가 없습니다.')
+  else ['summaryPdfTitle', 'fullPdfTitle'].forEach((key) => {
+    if (!isNonEmptyString(header[key])) errors.push(`header.${key}가 비어 있습니다.`)
+  })
+
   const hero = isRecord(value.hero) ? value.hero : null
   if (!hero) errors.push('hero가 없습니다.')
   else ['eyebrow', 'kicker', 'titleLead', 'titleAccent', 'titleTail', 'descriptionLead', 'descriptionAccent', 'descriptionTail'].forEach((key) => {

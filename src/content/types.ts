@@ -79,6 +79,11 @@ export interface HeroContent {
   descriptionTail: string
 }
 
+export interface HeaderContent {
+  summaryPdfTitle: string
+  fullPdfTitle: string
+}
+
 export interface ProfileContent {
   headingLead: string
   headingTail: string
@@ -129,6 +134,7 @@ export interface PrintContent {
 }
 
 export interface PortfolioContent {
+  header: HeaderContent
   hero: HeroContent
   profile: ProfileContent
   archive: ArchiveContent

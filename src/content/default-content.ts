@@ -1222,6 +1222,10 @@ const profileStatements = [
 const printProfileStatements = profileStatements.map((item) => ({ ...item, id: `print:${item.id}` }))
 
 export const defaultContent: PortfolioContent = {
+  header: {
+    summaryPdfTitle: '전체 프로젝트를 한 장 분량으로 요약한 PDF를 저장합니다',
+    fullPdfTitle: '상세 구현과 설계 도면까지 포함한 전체 PDF를 저장합니다',
+  },
   hero: {
     eyebrow: 'SEOUL · REAL-TIME 3D · INTERACTIVE SYSTEMS',
     kicker: '김세현 / KIM SAEHYEON · PORTFOLIO 2026',
