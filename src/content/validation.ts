@@ -157,8 +157,8 @@ export function validateContent(value: unknown): ValidationResult {
       if (!isNonEmptyString(project[key])) errors.push(`${label}.${key}가 비어 있습니다.`)
     })
     if (!Array.isArray(project.stack) || project.stack.length === 0 || !project.stack.every(isNonEmptyString)) errors.push(`${label}의 기술 스택이 올바르지 않습니다.`)
-    if (!Array.isArray(project.builds) || project.builds.length === 0) errors.push(`${label}의 만든 것 목록이 비어 있습니다.`)
-    else project.builds.forEach((item, itemIndex) => checkBuildItem(item, `${label} 만든 것 ${itemIndex + 1}`))
+    if (!Array.isArray(project.builds) || project.builds.length === 0) errors.push(`${label}의 구현 내용 목록이 비어 있습니다.`)
+    else project.builds.forEach((item, itemIndex) => checkBuildItem(item, `${label} 구현 항목 ${itemIndex + 1}`))
     if (project.youtube !== undefined && project.youtube !== null && !isYoutubeUrl(project.youtube)) errors.push(`${label}의 YouTube 링크가 올바르지 않습니다.`)
     if (project.links !== undefined) {
       if (!Array.isArray(project.links)) errors.push(`${label}의 링크 목록이 올바르지 않습니다.`)

@@ -227,8 +227,8 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
 
   const buildContent = (build: Project['builds'][number]) => (
     <article className="build-item" key={build.id}>
-      <EditableText as="h3" className="build-item-label" value={build.label} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, label: value }))} ariaLabel="만든 것 이름" />
-      <EditableText as="p" value={build.body} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, body: value }))} ariaLabel="만든 것 본문" multiline />
+      <EditableText as="h3" className="build-item-label" value={build.label} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, label: value }))} ariaLabel="구현 항목 이름" />
+      <EditableText as="p" value={build.body} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, body: value }))} ariaLabel="구현 항목 본문" multiline />
       {build.diagram && <Diagram
         spec={build.diagram.spec}
         caption={build.diagram.caption}
@@ -241,7 +241,7 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
           : build.media.kind === 'video'
             ? <video src={build.media.src} controls muted loop playsInline preload="metadata" />
             : <img src={build.media.src} alt="" loading="lazy" />}
-        <EditableText as="figcaption" value={build.media.caption} onChange={(value) => changeBuild(build.id, (item) => item.media ? { ...item, media: { ...item.media, caption: value } } : item)} ariaLabel="만든 것 미디어 캡션" multiline />
+        <EditableText as="figcaption" value={build.media.caption} onChange={(value) => changeBuild(build.id, (item) => item.media ? { ...item, media: { ...item.media, caption: value } } : item)} ariaLabel="구현 항목 미디어 캡션" multiline />
         <EditableMediaSource label="Build media source" value={build.media.src} onChange={(value) => changeBuild(build.id, (item) => item.media ? { ...item, media: { ...item.media, src: value } } : item)} />
       </figure>}
       {build.code && <figure className="build-code">
@@ -255,11 +255,11 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
     {
       code: 'CONTEXT',
       title: '배경',
-      content: <EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline />,
+      content: <div className="case-prose"><EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline /></div>,
     },
     {
       code: 'BUILD',
-      title: '만든 것',
+      title: '구현 내용',
       content: <div className="build-list">{project.builds.map(buildContent)}</div>,
     },
   ]
@@ -389,8 +389,8 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
     {build.code && <figure className="print-build-code"><figcaption><span>{build.code.label}</span><em>{build.code.pseudo ? 'PSEUDOCODE' : build.code.lang}</em></figcaption><pre><code>{build.code.source}</code></pre></figure>}
   </section>
   const printSections = (project: Project) => [
-    { code: 'CONTEXT', title: '배경', content: <p>{project.context}</p> },
-    { code: 'BUILD', title: '만든 것', content: isFull ? <div className="print-build-list">{project.builds.map(printBuild)}</div> : <p>{project.builds.map((build) => build.label).join(' · ')}</p> },
+    { code: 'CONTEXT', title: '배경', content: <div className="print-prose"><p>{project.context}</p></div> },
+    { code: 'BUILD', title: '구현 내용', content: isFull ? <div className="print-build-list">{project.builds.map(printBuild)}</div> : <div className="print-prose"><p>{project.builds.map((build) => build.label).join(' · ')}</p></div> },
   ]
   return (
     <article className={'print-document' + (isFull ? ' is-full' : ' is-summary')}>
