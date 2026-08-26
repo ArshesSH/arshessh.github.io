@@ -60,14 +60,41 @@ interface EditorToolbarProps {
   onExit: () => void
 }
 
+type SaveState = 'not-saved' | 'needs-save' | 'saved'
+
+const saveButtonLabels: Record<SaveState, string> = {
+  'not-saved': '저장',
+  'needs-save': '저장 필요',
+  saved: '저장됨',
+}
+
+function getSaveState(dirty: boolean, draftExists: boolean): SaveState {
+  if (dirty) return 'needs-save'
+  return draftExists ? 'saved' : 'not-saved'
+}
+
 function formatSavedAt(value: string | null) {
-  if (!value) return '아직 저장하지 않았습니다.'
-  return `마지막 저장 ${new Date(value).toLocaleString('ko-KR')}`
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return `마지막 저장 ${date.toLocaleString('ko-KR')}`
+}
+
+function getSaveStatus(state: SaveState, savedAt: string | null) {
+  if (state === 'not-saved') return '아직 저장하지 않았습니다.'
+
+  const lastSaved = formatSavedAt(savedAt)
+  if (state === 'needs-save') {
+    return lastSaved ? `저장하지 않은 변경사항이 있습니다. ${lastSaved}` : '저장하지 않은 변경사항이 있습니다.'
+  }
+  return lastSaved ? `저장된 초안을 사용 중입니다. ${lastSaved}` : '저장된 초안을 사용 중입니다.'
 }
 
 export function EditorToolbar({ content, dirty, draftExists, savedAt, onSave, onImport, onReset, onExit }: EditorToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState('')
+  const saveState = getSaveState(dirty, draftExists)
+  const saveStatus = getSaveStatus(saveState, draftExists ? savedAt : null)
 
   const save = () => {
     setMessage(onSave() ? '브라우저에 저장했습니다.' : '브라우저 저장에 실패했습니다.')
@@ -108,11 +135,14 @@ export function EditorToolbar({ content, dirty, draftExists, savedAt, onSave, on
         <span>본문을 클릭해 인라인으로 편집합니다.</span>
       </div>
       <div className="editor-toolbar-actions">
-        <button type="button" onClick={save}>{dirty ? '저장' : '저장됨'}</button>
+        <button type="button" onClick={save}>{saveButtonLabels[saveState]}</button>
         <button type="button" onClick={exportJson}>JSON 내보내기</button>
         <button type="button" onClick={() => fileInputRef.current?.click()}>JSON 불러오기</button>
         <button type="button" onClick={() => {
-          if (window.confirm('현재 편집 내용을 기본 콘텐츠로 되돌리겠습니까?')) onReset()
+          if (window.confirm('현재 편집 내용을 기본 콘텐츠로 되돌리겠습니까?')) {
+            onReset()
+            setMessage('')
+          }
         }}>기본값 복원</button>
         <button className="editor-toolbar-exit" type="button" onClick={onExit}>편집 종료</button>
         <input ref={fileInputRef} type="file" accept="application/json,.json" hidden onChange={(event) => {
@@ -122,7 +152,7 @@ export function EditorToolbar({ content, dirty, draftExists, savedAt, onSave, on
         }} />
       </div>
       <p className="editor-toolbar-status" aria-live="polite">
-        {message || (draftExists ? '저장된 초안을 복원했습니다.' : formatSavedAt(savedAt))}
+        {message ? `${message} ` : ''}{saveStatus}
       </p>
     </aside>
   )
