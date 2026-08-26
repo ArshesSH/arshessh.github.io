@@ -12,7 +12,7 @@ function Arrow() {
 }
 
 function getRoute() {
-  return window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean)
+  return window.location.hash.replace(/^#\/?/, '').split('?')[0].split('/').filter(Boolean)
 }
 
 function getYoutubeEmbedUrl(url: string) {
@@ -450,11 +450,18 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
   )
 }
 
+function isEditRequested() {
+  if (new URLSearchParams(window.location.search).get('edit') === '1') return true
+  const hashQuery = window.location.hash.indexOf('?')
+  if (hashQuery === -1) return false
+  return new URLSearchParams(window.location.hash.slice(hashQuery + 1)).get('edit') === '1'
+}
+
 function App() {
   const [content, setContent] = useState(createDefaultContent)
   const [route, setRoute] = useState(getRoute())
   const [printVariant, setPrintVariant] = useState<PdfVariant | null>(null)
-  const [editMode, setEditMode] = useState(() => new URLSearchParams(window.location.search).get('edit') === '1')
+  const [editMode, setEditMode] = useState(isEditRequested)
   const [dirty, setDirty] = useState(false)
   const [draftExists, setDraftExists] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
