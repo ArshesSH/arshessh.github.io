@@ -450,7 +450,10 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
   )
 }
 
+const EDITOR_ENABLED = import.meta.env.DEV
+
 function isEditRequested() {
+  if (!EDITOR_ENABLED) return false
   if (new URLSearchParams(window.location.search).get('edit') === '1') return true
   const hashQuery = window.location.hash.indexOf('?')
   if (hashQuery === -1) return false
@@ -475,6 +478,7 @@ function App() {
   }
 
   useEffect(() => {
+    if (!EDITOR_ENABLED) return
     const draft = readReviewDraft()
     if (draft) {
       setContent(draft.content)
@@ -490,6 +494,7 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!EDITOR_ENABLED) return
     const toggleEditor = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'e') {
         event.preventDefault()
@@ -566,7 +571,7 @@ function App() {
 
   return (
     <EditorModeProvider enabled={editMode}>
-      {editMode && <EditorToolbar content={content} dirty={dirty} draftExists={draftExists} savedAt={savedAt} onSave={saveDraft} onImport={importContent} onReset={resetContent} onExit={() => setEditMode(false)} />}
+      {EDITOR_ENABLED && editMode && <EditorToolbar content={content} dirty={dirty} draftExists={draftExists} savedAt={savedAt} onSave={saveDraft} onImport={importContent} onReset={resetContent} onExit={() => setEditMode(false)} />}
       <div className="screen-app"><a className="skip-link" href="#main">본문으로 건너뛰기</a>{page}<footer><p>© 2026 김세현 / KIM SAEHYEON</p><p>REAL-TIME 3D ENGINEER · SEOUL</p><a href="#/">HOME ↑</a></footer></div>
       {printVariant && <PrintPortfolio content={content} variant={printVariant} />}
     </EditorModeProvider>
