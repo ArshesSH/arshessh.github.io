@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Diagram } from './diagrams'
 import { createDefaultContent } from './content/default-content'
-import { EditorModeProvider, EditorToolbar, EditableText, useEditorMode } from './content/editor'
+import { commitActiveEditable, EditorModeProvider, EditorToolbar, EditableText, useEditorMode } from './content/editor'
 import { clearReviewDraft, readReviewDraft, writeReviewDraft } from './content/review-storage'
 import type { ContentItem, EducationItem, ExperienceItem, HeaderContent, PdfVariant, PortfolioContent, Project } from './content/types'
 
@@ -472,6 +472,7 @@ function isEditRequested() {
 
 function App() {
   const [content, setContent] = useState(createDefaultContent)
+  const contentRef = useRef(content)
   const [route, setRoute] = useState(getRoute())
   const [printVariant, setPrintVariant] = useState<PdfVariant | null>(null)
   const [editMode, setEditMode] = useState(isEditRequested)
@@ -480,17 +481,17 @@ function App() {
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
   const updateContent: ContentUpdater = (updater) => {
-    setContent((current) => {
-      const next = updater(current)
-      setDirty(true)
-      return next
-    })
+    const next = updater(contentRef.current)
+    contentRef.current = next
+    setContent(next)
+    setDirty(true)
   }
 
   useEffect(() => {
     if (!EDITOR_ENABLED) return
     const draft = readReviewDraft()
     if (draft) {
+      contentRef.current = draft.content
       setContent(draft.content)
       setDraftExists(true)
       setSavedAt(draft.updatedAt)
@@ -498,7 +499,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const update = () => { setRoute(getRoute()); window.scrollTo(0, 0) }
+    const update = () => { commitActiveEditable(); setRoute(getRoute()); window.scrollTo(0, 0) }
     window.addEventListener('hashchange', update)
     return () => window.removeEventListener('hashchange', update)
   }, [])
@@ -508,6 +509,7 @@ function App() {
     const toggleEditor = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'e') {
         event.preventDefault()
+        commitActiveEditable()
         setEditMode((enabled) => !enabled)
       }
     }
@@ -525,6 +527,7 @@ function App() {
   }, [])
 
   const downloadPdf = (variant: PdfVariant) => {
+    commitActiveEditable()
     document.body.classList.add('is-printing')
     setPrintVariant(variant)
     window.setTimeout(async () => {
@@ -542,8 +545,9 @@ function App() {
   }
 
   const saveDraft = () => {
+    commitActiveEditable()
     const timestamp = new Date().toISOString()
-    const success = writeReviewDraft(content, timestamp)
+    const success = writeReviewDraft(contentRef.current, timestamp)
     if (success) {
       setDirty(false)
       setDraftExists(true)
@@ -553,6 +557,7 @@ function App() {
   }
 
   const importContent = (nextContent: PortfolioContent, updatedAt?: string) => {
+    contentRef.current = nextContent
     setContent(nextContent)
     setDirty(true)
     setDraftExists(false)
@@ -561,7 +566,9 @@ function App() {
 
   const resetContent = () => {
     clearReviewDraft()
-    setContent(createDefaultContent())
+    const nextContent = createDefaultContent()
+    contentRef.current = nextContent
+    setContent(nextContent)
     setDirty(false)
     setDraftExists(false)
     setSavedAt(null)
@@ -581,7 +588,7 @@ function App() {
 
   return (
     <EditorModeProvider enabled={editMode}>
-      {EDITOR_ENABLED && editMode && <EditorToolbar content={content} dirty={dirty} draftExists={draftExists} savedAt={savedAt} onSave={saveDraft} onImport={importContent} onReset={resetContent} onExit={() => setEditMode(false)} />}
+      {EDITOR_ENABLED && editMode && <EditorToolbar getLatestContent={() => contentRef.current} dirty={dirty} draftExists={draftExists} savedAt={savedAt} onSave={saveDraft} onImport={importContent} onReset={resetContent} onExit={() => setEditMode(false)} />}
       <div className="screen-app"><a className="skip-link" href="#main">본문으로 건너뛰기</a>{page}<footer><p>© 2026 김세현 / KIM SAEHYEON</p><p>REAL-TIME 3D ENGINEER · SEOUL</p><a href="#/">HOME ↑</a></footer></div>
       {printVariant && <PrintPortfolio content={content} variant={printVariant} />}
     </EditorModeProvider>

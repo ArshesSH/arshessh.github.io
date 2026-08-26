@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext, useRef, useState, type FocusEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { createContext, createElement, Fragment, useContext, useRef, useState, type FocusEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { CONTENT_VERSION, type ContentDraft, type PortfolioContent } from './types'
 import { explainContentImport, parseContentImport } from './review-storage'
 
@@ -12,6 +12,11 @@ export function useEditorMode() {
   return useContext(EditorModeContext)
 }
 
+export function commitActiveEditable() {
+  const active = document.activeElement
+  if (active instanceof HTMLElement && active.isContentEditable) active.blur()
+}
+
 type EditableTag = 'p' | 'span' | 'small' | 'strong' | 'em' | 'h1' | 'h2' | 'h3' | 'h4' | 'dd' | 'dt' | 'li' | 'code' | 'figcaption'
 
 interface EditableTextProps {
@@ -23,9 +28,14 @@ interface EditableTextProps {
   ariaLabel?: string
 }
 
+function renderText(value: string, multiline: boolean): ReactNode {
+  if (!multiline || !value.includes('\n')) return value
+  return value.split('\n').map((line, index) => index === 0 ? line : createElement(Fragment, { key: index }, createElement('br'), line))
+}
+
 export function EditableText({ value, onChange, as = 'span', className, multiline = false, ariaLabel }: EditableTextProps) {
   const enabled = useContext(EditorModeContext)
-  if (!enabled) return createElement(as, { className }, value)
+  if (!enabled) return createElement(as, { className }, renderText(value, multiline))
 
   const handleBlur = (event: FocusEvent<HTMLElement>) => {
     const nextValue = multiline ? event.currentTarget.innerText : event.currentTarget.textContent
@@ -33,6 +43,7 @@ export function EditableText({ value, onChange, as = 'span', className, multilin
   }
 
   return createElement(as, {
+    key: multiline ? value : undefined,
     className: className ? `${className} editable-inline` : 'editable-inline',
     contentEditable: true,
     suppressContentEditableWarning: true,
@@ -46,11 +57,11 @@ export function EditableText({ value, onChange, as = 'span', className, multilin
         event.currentTarget.blur()
       }
     },
-  }, value)
+  }, renderText(value, multiline))
 }
 
 interface EditorToolbarProps {
-  content: PortfolioContent
+  getLatestContent: () => PortfolioContent
   dirty: boolean
   draftExists: boolean
   savedAt: string | null
@@ -90,18 +101,20 @@ function getSaveStatus(state: SaveState, savedAt: string | null) {
   return lastSaved ? `저장된 초안을 사용 중입니다. ${lastSaved}` : '저장된 초안을 사용 중입니다.'
 }
 
-export function EditorToolbar({ content, dirty, draftExists, savedAt, onSave, onImport, onReset, onExit }: EditorToolbarProps) {
+export function EditorToolbar({ getLatestContent, dirty, draftExists, savedAt, onSave, onImport, onReset, onExit }: EditorToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState('')
   const saveState = getSaveState(dirty, draftExists)
   const saveStatus = getSaveStatus(saveState, draftExists ? savedAt : null)
 
   const save = () => {
+    commitActiveEditable()
     setMessage(onSave() ? '브라우저에 저장했습니다.' : '브라우저 저장에 실패했습니다.')
   }
 
   const exportJson = () => {
-    const draft: ContentDraft = { version: CONTENT_VERSION, updatedAt: new Date().toISOString(), content }
+    commitActiveEditable()
+    const draft: ContentDraft = { version: CONTENT_VERSION, updatedAt: new Date().toISOString(), content: getLatestContent() }
     const blob = new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -135,16 +148,16 @@ export function EditorToolbar({ content, dirty, draftExists, savedAt, onSave, on
         <span>본문을 클릭해 인라인으로 편집합니다.</span>
       </div>
       <div className="editor-toolbar-actions">
-        <button type="button" onClick={save}>{saveButtonLabels[saveState]}</button>
-        <button type="button" onClick={exportJson}>JSON 내보내기</button>
-        <button type="button" onClick={() => fileInputRef.current?.click()}>JSON 불러오기</button>
-        <button type="button" onClick={() => {
+        <button type="button" onMouseDown={commitActiveEditable} onClick={save}>{saveButtonLabels[saveState]}</button>
+        <button type="button" onMouseDown={commitActiveEditable} onClick={exportJson}>JSON 내보내기</button>
+        <button type="button" onMouseDown={commitActiveEditable} onClick={() => fileInputRef.current?.click()}>JSON 불러오기</button>
+        <button type="button" onMouseDown={commitActiveEditable} onClick={() => {
           if (window.confirm('현재 편집 내용을 기본 콘텐츠로 되돌리겠습니까?')) {
             onReset()
             setMessage('')
           }
         }}>기본값 복원</button>
-        <button className="editor-toolbar-exit" type="button" onClick={onExit}>편집 종료</button>
+        <button className="editor-toolbar-exit" type="button" onMouseDown={commitActiveEditable} onClick={onExit}>편집 종료</button>
         <input ref={fileInputRef} type="file" accept="application/json,.json" hidden onChange={(event) => {
           const file = event.target.files?.[0]
           event.target.value = ''
