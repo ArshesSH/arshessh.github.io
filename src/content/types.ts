@@ -1,6 +1,6 @@
 import type { DiagramSpec } from '../diagrams'
 
-export const CONTENT_VERSION = 2
+export const CONTENT_VERSION = 4
 
 export type ProjectGroup = 'company' | 'personal'
 export type PdfVariant = 'summary' | 'full'
@@ -22,50 +22,45 @@ export interface ProjectLink {
   href: string
 }
 
-export interface DeepDiveMedia {
+export interface BuildMedia {
   kind: 'image' | 'video' | 'youtube'
   src: string
   caption: string
 }
 
-export interface DeepDiveCode {
+export interface BuildCode {
   label: string
   lang: string
   pseudo?: boolean
   source: string
 }
 
-export interface DeepDive {
+export interface BuildItem {
   id: string
-  heading: string
+  label: string
   body: string
   diagram?: { spec: DiagramSpec; caption: string }
-  media?: DeepDiveMedia
-  code?: DeepDiveCode
+  media?: BuildMedia
+  code?: BuildCode
 }
 
 export interface Project {
   id: string
   slug: string
   group: ProjectGroup
-  number: string
   category: string
   period: string
   title: string
   shortTitle: string
   summary: string
-  impact: string
   role: string
   team: string
   stack: string[]
   context: string
-  challenge: string
-  approach: ContentItem[]
-  results: ContentItem[]
+  builds: BuildItem[]
   links?: ProjectLink[]
   youtube?: string
   images?: ProjectImage[]
-  deepDive?: DeepDive[]
 }
 
 export interface HeroContent {

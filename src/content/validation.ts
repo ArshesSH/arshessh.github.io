@@ -96,6 +96,21 @@ export function validateContent(value: unknown): ValidationResult {
     if (!isNonEmptyString(valueToCheck.text)) errors.push(`${label}의 본문이 비어 있습니다.`)
   }
 
+  const checkBuildItem = (valueToCheck: unknown, label: string) => {
+    if (!isRecord(valueToCheck)) {
+      errors.push(`${label} 항목이 올바르지 않습니다.`)
+      return
+    }
+    addId(valueToCheck.id, label)
+    if (!isNonEmptyString(valueToCheck.label) || !isNonEmptyString(valueToCheck.body)) errors.push(`${label}의 이름 또는 본문이 비어 있습니다.`)
+    if (valueToCheck.diagram !== undefined && (!isRecord(valueToCheck.diagram) || !isDiagramSpec(valueToCheck.diagram.spec) || !isNonEmptyString(valueToCheck.diagram.caption))) errors.push(`${label}의 다이어그램이 올바르지 않습니다.`)
+    if (valueToCheck.media !== undefined) {
+      if (!isRecord(valueToCheck.media) || !['image', 'video', 'youtube'].includes(String(valueToCheck.media.kind)) || !isMediaPath(valueToCheck.media.src) || !isNonEmptyString(valueToCheck.media.caption)) errors.push(`${label}의 미디어가 올바르지 않습니다.`)
+      if (isRecord(valueToCheck.media) && valueToCheck.media.kind === 'youtube' && !isYoutubeUrl(valueToCheck.media.src)) errors.push(`${label}의 YouTube 미디어 주소가 올바르지 않습니다.`)
+    }
+    if (valueToCheck.code !== undefined && (!isRecord(valueToCheck.code) || !isNonEmptyString(valueToCheck.code.label) || !isNonEmptyString(valueToCheck.code.lang) || !isNonEmptyString(valueToCheck.code.source) || (valueToCheck.code.pseudo !== undefined && typeof valueToCheck.code.pseudo !== 'boolean'))) errors.push(`${label}의 코드 블록이 올바르지 않습니다.`)
+  }
+
   if (!isRecord(value)) return { valid: false, errors: ['콘텐츠가 객체가 아닙니다.'] }
 
   const header = isRecord(value.header) ? value.header : null
@@ -138,15 +153,12 @@ export function validateContent(value: unknown): ValidationResult {
     else if (slugs.has(project.slug)) errors.push(`중복 slug: ${project.slug}`)
     else slugs.add(project.slug)
     if (!['company', 'personal'].includes(String(project.group))) errors.push(`${label}의 group이 올바르지 않습니다.`)
-    ;['number', 'category', 'period', 'title', 'shortTitle', 'summary', 'impact', 'role', 'team', 'context', 'challenge'].forEach((key) => {
+    ;['category', 'period', 'title', 'shortTitle', 'summary', 'role', 'team', 'context'].forEach((key) => {
       if (!isNonEmptyString(project[key])) errors.push(`${label}.${key}가 비어 있습니다.`)
     })
     if (!Array.isArray(project.stack) || project.stack.length === 0 || !project.stack.every(isNonEmptyString)) errors.push(`${label}의 기술 스택이 올바르지 않습니다.`)
-    if (!Array.isArray(project.approach) || project.approach.length === 0) errors.push(`${label}의 구현 목록이 비어 있습니다.`)
-    else project.approach.forEach((item, itemIndex) => checkTextItem(item, `${label} 구현 ${itemIndex + 1}`))
-    if (!Array.isArray(project.results) || project.results.length === 0) errors.push(`${label}의 결과 목록이 비어 있습니다.`)
-    else project.results.forEach((item, itemIndex) => checkTextItem(item, `${label} 결과 ${itemIndex + 1}`))
-
+    if (!Array.isArray(project.builds) || project.builds.length === 0) errors.push(`${label}의 만든 것 목록이 비어 있습니다.`)
+    else project.builds.forEach((item, itemIndex) => checkBuildItem(item, `${label} 만든 것 ${itemIndex + 1}`))
     if (project.youtube !== undefined && project.youtube !== null && !isYoutubeUrl(project.youtube)) errors.push(`${label}의 YouTube 링크가 올바르지 않습니다.`)
     if (project.links !== undefined) {
       if (!Array.isArray(project.links)) errors.push(`${label}의 링크 목록이 올바르지 않습니다.`)
@@ -170,24 +182,6 @@ export function validateContent(value: unknown): ValidationResult {
         }
         addId(image.id, imageLabel)
         if (!isMediaPath(image.src) || !isNonEmptyString(image.caption)) errors.push(`${imageLabel}의 경로 또는 캡션이 올바르지 않습니다.`)
-      })
-    }
-    if (project.deepDive !== undefined) {
-      if (!Array.isArray(project.deepDive)) errors.push(`${label}의 상세 구현 목록이 올바르지 않습니다.`)
-      else project.deepDive.forEach((block, blockIndex) => {
-        const blockLabel = `${label} 상세 구현 ${blockIndex + 1}`
-        if (!isRecord(block)) {
-          errors.push(`${blockLabel}가 올바르지 않습니다.`)
-          return
-        }
-        addId(block.id, blockLabel)
-        if (!isNonEmptyString(block.heading) || !isNonEmptyString(block.body)) errors.push(`${blockLabel}의 제목 또는 본문이 비어 있습니다.`)
-        if (block.diagram !== undefined && (!isRecord(block.diagram) || !isDiagramSpec(block.diagram.spec) || !isNonEmptyString(block.diagram.caption))) errors.push(`${blockLabel}의 다이어그램이 올바르지 않습니다.`)
-        if (block.media !== undefined) {
-          if (!isRecord(block.media) || !['image', 'video', 'youtube'].includes(String(block.media.kind)) || !isMediaPath(block.media.src) || !isNonEmptyString(block.media.caption)) errors.push(`${blockLabel}의 미디어가 올바르지 않습니다.`)
-          if (isRecord(block.media) && block.media.kind === 'youtube' && !isYoutubeUrl(block.media.src)) errors.push(`${blockLabel}의 YouTube 미디어 주소가 올바르지 않습니다.`)
-        }
-        if (block.code !== undefined && (!isRecord(block.code) || !isNonEmptyString(block.code.label) || !isNonEmptyString(block.code.lang) || !isNonEmptyString(block.code.source) || (block.code.pseudo !== undefined && typeof block.code.pseudo !== 'boolean'))) errors.push(`${blockLabel}의 코드 블록이 올바르지 않습니다.`)
       })
     }
   })

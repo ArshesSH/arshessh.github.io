@@ -1,42 +1,60 @@
-import type { DeepDive, ExperienceItem, Project, PortfolioContent } from './types'
+import type { BuildItem, ExperienceItem, Project, PortfolioContent } from './types'
 
-type ProjectSeed = Omit<Project, 'id' | 'approach' | 'results' | 'links' | 'images' | 'deepDive'> & {
-  approach: string[]
-  results: string[]
+type BuildSeed = Omit<BuildItem, 'id'>
+type BuildDetailSeed = Omit<BuildSeed, 'body'> & { target?: number; body?: string }
+
+type ProjectSeed = Omit<Project, 'id' | 'builds' | 'links' | 'images'> & {
+  builds: BuildSeed[]
   links?: { label: string; href: string }[]
   images?: { src: string; caption: string }[]
-  deepDive?: Omit<DeepDive, 'id'>[]
+  buildDetails?: BuildDetailSeed[]
+}
+
+function mergeBuildDetails(builds: BuildSeed[], details?: BuildDetailSeed[]) {
+  const merged = builds.map((build) => ({ ...build }))
+  details?.forEach(({ target, ...detail }) => {
+    if (target === undefined || !merged[target]) {
+      merged.push({ ...detail, body: detail.body ?? '' })
+      return
+    }
+    merged[target] = {
+      ...merged[target],
+      body: detail.body ? `${merged[target].body} ${detail.body}` : merged[target].body,
+      diagram: detail.diagram ?? merged[target].diagram,
+      media: detail.media ?? merged[target].media,
+      code: detail.code ?? merged[target].code,
+    }
+  })
+  return merged
 }
 
 const projectSeeds: ProjectSeed[] = [
   {
     slug: 'vr-taekwondo',
     group: 'company',
-    number: '01',
     category: 'VR · FULL BODY TRACKING',
     period: '2026.05.14 — 2026.07.16',
     title: 'VR 태권도 대회용 프로그램',
     shortTitle: 'VR 태권도 대전',
     summary: 'Unreal Engine 5.6과 PICO SDK를 이용해 1:1 VR 대전 프로그램을 개발했습니다. 두 명의 VR 플레이어와 관전용 PC를 연결하고 전투 상태를 처리했습니다.',
-    impact: '24개 관절 Transform · 30Hz 공유',
     role: 'VR Client Developer',
     team: '2-PERSON TEAM · PC 관전/리슨 서버',
     stack: ['Unreal Engine 5.6', 'C++', 'PICO SDK', 'GAS', 'Control Rig', 'UMG'],
-    context: 'PICO 4 Ultra 2대와 PC 1대를 연결해, 두 명의 플레이어가 VR로 대전하고 PC에서 경기를 관전하는 대회용 프로그램을 개발했습니다. 2026년 7월 16일까지 개발을 마치고 대회 전에 전달과 검수를 진행했습니다.',
-    challenge: 'PICO SDK에서 수집한 24개 관절 Transform을 네트워크로 공유하면서 전투 상태와 원격 캐릭터의 움직임을 함께 유지해야 했습니다. 또한 관전 카메라 추적과 발차기 판정 범위처럼 현장 테스트에서만 드러나는 문제에도 대응해야 했습니다.',
-    approach: [
-      'PICO SDK의 관절 데이터를 Control Rig의 FK/IK 구조에 적용하고, 사용자가 입력한 키를 기준으로 신체 크기를 보정하는 기능을 구현했습니다.',
-      '24개 관절 Transform을 30Hz로 공유하고 원격 클라이언트에 스냅샷 보간을 적용했습니다. 또한 UDP Broadcast를 이용한 LAN 서버 검색과 자동 연결을 구성했습니다.',
-      'GAS와 GameplayTag로 충돌 부위와 속도를 기준으로 한 데미지 산출과 전투 상태를 처리했습니다. 절차적 피격 애니메이션과 대전 HUD를 구현했고, 최종 통합과 패키징을 담당했습니다.',
-      '현장 테스트에서 확인된 관전 카메라 추적 문제는 카메라 방향과 추적 대상을 결정하는 로직을 정리해 해결했습니다.',
+    context: 'PICO 4 Ultra 2대와 PC 1대를 연결해, 두 명이 VR로 대전하고 PC에서 경기를 관전하는 대회용 프로그램입니다. 2인 팀에서 VR 클라이언트 전반을 맡아 2026년 7월 16일까지 개발을 마쳤습니다. 클라이언트가 받는 입력은 PICO SDK의 24개 관절 Transform 하나였고, 두 헤드셋 사이의 동기화와 대전 판정, 관전 화면을 모두 그 위에서 만들었습니다. 헤드셋 2대와 관전 PC를 연결한 전체 경기 흐름은 현장에서 확인했지만, 대회 운영에는 최종적으로 사용되지 않았습니다.',
+    builds: [
+      { label: '전신 트래킹 리타게팅', body: 'PICO SDK가 주는 24개 관절 Transform을 캐릭터에 그대로 적용하면 착용자마다 자세가 어긋납니다. 팔과 다리 길이가 달라 같은 회전값이라도 실제 포즈가 달라지기 때문입니다. 사용자가 입력한 키를 기준으로 본 길이를 보정한 뒤 Control Rig에 적용했습니다. 상체는 FK로 회전을 따라가게 하고, 손과 발 끝단은 IK로 목표 위치를 맞췄습니다.' },
+      { label: '관절 동기화 네트워크', body: '상대 캐릭터의 움직임을 기준으로 충돌을 판정하기 때문에 두 헤드셋이 서로의 포즈를 알고 있어야 했습니다. 매 프레임 24개 관절을 모두 보내는 대신 전송 주기를 30Hz로 고정하고, 그 사이 구간은 원격 클라이언트에서 직전 스냅샷과 최신 스냅샷을 보간해 채웠습니다. 전투 상태는 관절 데이터와 분리해 신뢰성 있게 복제했기 때문에 패킷이 늦어도 상태 전이가 어긋나지 않습니다.' },
+      { label: 'LAN 자동 연결', body: '대회 현장에서 운영자가 IP를 입력하지 않아도 접속되도록 만들었습니다. PC 관전 클라이언트를 리슨 서버로 두고, 헤드셋이 같은 LAN에 UDP 브로드캐스트를 보내 응답한 서버에 자동으로 접속합니다. 운영자는 PC에서 프로그램을 실행하고 헤드셋을 착용하기만 하면 됩니다. 접속에 실패하면 일정 간격으로 탐색을 재시도합니다.' },
+      { label: '타격 판정과 피드백', body: '태권도 대전에서는 타격이 닿았는지보다 어느 부위에 얼마나 빠르게 닿았는지가 중요합니다. 충돌한 부위와 그 순간의 속도를 함께 읽어 GAS 이펙트로 데미지를 산출했습니다. 득점 부위와 무효 조건은 GameplayTag로 표현해 조건 분기를 데이터에서 처리했습니다. 판정이 성립하면 피격 방향에 맞는 절차적 애니메이션과 대전 HUD 반영을 함께 실행했습니다.' },
+      { label: '규칙 교체용 데이터 분리', body: '대회 종목과 규칙은 개발 도중에 바뀔 수 있다고 보고 판정 기준을 코드에 상수로 두지 않았습니다. 판정 로직은 GAS와 GameplayTag로 규칙의 형태만 기술하고, 득점 부위와 수치는 DataAsset으로 분리했습니다. 이후 복싱 종목이 필요해졌을 때는 캐릭터와 맵 에셋을 교체하고 DataAsset을 조정하는 것으로 대응했습니다. 트래킹과 동기화, 판정 파이프라인은 수정하지 않고 그대로 재사용했습니다.' },
+      { label: 'PC 관전 화면', body: '관전 PC는 리슨 서버이면서 경기를 보여주는 화면이기도 했습니다. 두 선수의 위치에 따라 카메라 방향과 추적 대상을 결정하는 로직을 구성했고, 현장 테스트에서 확인된 추적 거동을 반영해 다듬었습니다. 최종 통합과 패키징도 함께 담당했습니다.' },
     ],
-    results: ['PICO 2대와 관전 PC를 연결한 전체 경기 흐름을 현장에서 테스트했습니다.', '대회 전에 프로그램을 전달하고 담당자 검수를 완료했습니다. 다만 실제 대회 운영에는 사용되지 않았습니다.'],
     youtube: 'https://youtu.be/JvcPezQjLvo',
     images: [{ src: '/portfolio-media/vr-taekwondo-main.png', caption: '경복궁을 배경으로 한 1:1 VR 대전 화면. 관전 PC 기준 시점입니다.' }],
-    deepDive: [
+    buildDetails: [
       {
-        heading: '관절 데이터에서 캐릭터 포즈까지',
-        body: 'PICO SDK에서 제공하는 24개 관절 Transform을 캐릭터에 그대로 적용하면 자세가 어긋나는 문제가 있었습니다. 착용자마다 팔과 다리 길이가 달라 같은 회전값이라도 실제 자세가 달라지기 때문입니다. 이를 위해 사용자가 입력한 키를 기준으로 본 길이를 보정한 뒤 Control Rig에 적용했습니다. 상체는 FK로 회전을 따라가게 하고, 손과 발 끝단은 IK로 목표 위치를 맞췄습니다.',
+        label: '전신 트래킹 리타게팅',
+        target: 0,
         diagram: {
           spec: {
             kind: 'layers',
@@ -51,8 +69,8 @@ const projectSeeds: ProjectSeed[] = [
         },
       },
       {
-        heading: '24개 관절을 30Hz로 공유하기',
-        body: '두 대의 PICO를 연결한 대전에서는 상대 캐릭터의 움직임을 바탕으로 충돌을 판정해야 했습니다. 하지만 매 프레임 24개 관절을 모두 전송하면 대역폭을 감당하기 어려웠습니다. 전송 주기를 30Hz로 고정하고, 그 사이 구간은 원격 클라이언트에서 직전 스냅샷과 최신 스냅샷을 보간해 채웠습니다. 전투 상태는 관절 데이터와 분리해 신뢰성 있게 복제했습니다. 패킷이 늦어도 상태 전이가 어긋나지 않습니다.',
+        label: '관절 동기화 네트워크',
+        target: 1,
         diagram: {
           spec: {
             kind: 'flow',
@@ -91,8 +109,8 @@ tick(dt):
         },
       },
       {
-        heading: '대회장에서 서버 주소 없이 연결하기',
-        body: '대회 현장에서 운영자가 IP를 직접 입력하지 않아도 접속할 수 있는 기능이 필요했습니다. PC 관전 클라이언트를 리슨 서버로 두고, 헤드셋이 같은 LAN에 브로드캐스트를 보내 응답한 서버에 자동으로 접속하게 했습니다. 운영자는 PC에서 프로그램을 실행하고 헤드셋을 착용하기만 하면 됩니다. 접속에 실패하면 일정 간격으로 탐색을 재시도합니다.',
+        label: 'LAN 자동 연결',
+        target: 2,
         diagram: {
           spec: {
             kind: 'sequence',
@@ -108,8 +126,8 @@ tick(dt):
         },
       },
       {
-        heading: '발차기를 점수로 바꾸는 판정',
-        body: '태권도 대전에서는 타격이 닿았는지보다 어느 부위에 얼마나 빠르게 닿았는지가 중요했습니다. 충돌한 부위와 그 순간의 속도를 함께 읽어 데미지를 산출했습니다. 부위와 상태, 무효 조건은 모두 GameplayTag로 표현해 조건 분기를 데이터에서 처리했습니다. 판정이 성립하면 피격 방향에 맞는 절차적 애니메이션과 HUD 반영을 함께 실행했습니다.',
+        label: '타격 판정과 피드백',
+        target: 3,
         diagram: {
           spec: {
             kind: 'flow',
@@ -147,8 +165,8 @@ on_hit(attacker_part, target_part, hit_velocity):
         },
       },
       {
-        heading: '규칙이 바뀔 것을 전제로 만든 판정',
-        body: '대회 종목과 규칙은 개발 도중에 바뀔 수 있다고 판단해, 판정 기준을 코드에 상수로 두지 않았습니다. 판정 로직은 GAS와 GameplayTag로 규칙의 형태만 기술하고, 득점 부위와 수치는 DataAsset으로 분리했습니다. 이후 복싱 종목이 필요해졌을 때는 캐릭터와 맵 에셋을 교체하고 DataAsset을 조정하는 것으로 대응할 수 있었습니다. 트래킹과 동기화, 판정 파이프라인은 수정하지 않고 그대로 재사용했습니다.',
+        label: '규칙 교체용 데이터 분리',
+        target: 4,
         media: { kind: 'youtube', src: 'https://youtu.be/1I24qFLC4lo', caption: '복싱 모드 대전 영상. 파이프라인을 수정하지 않고 에셋과 판정 DataAsset만 교체해 구성했습니다.' },
       },
     ],
@@ -156,30 +174,26 @@ on_hit(attacker_part, target_part, hit_velocity):
   {
     slug: 'ar-underground-pipeline',
     group: 'company',
-    number: '02',
     category: 'ANDROID AR · PERFORMANCE',
     period: '2025.11 — 2026.03',
     title: 'AR 지하 배관 클라이언트',
     shortTitle: 'AR 지하 배관',
     summary: '실제 지하 배관의 위경도와 고도 데이터를 AR 공간에 배치하는 Android 클라이언트를 개발했습니다. ARCore 환경 깊이와 Unity AI Inference Depth estimation을 이용해 지하 배관을 가리는 Occlusion을 구현했습니다.',
-    impact: 'Occlusion 두 방식 구현·비교 · 현장 PoC 완료 · 본사업 진행 중',
     role: 'Client Developer',
     team: 'OASIS AIX · PM · 모델러 · GIS · CLIENT',
     stack: ['Unity', 'C#', 'AR Foundation', 'ARCore', 'Unity AI Inference', 'Addressables'],
-    context: '굴착 전에 지하 배관의 위치와 깊이를 현장에서 확인할 수 있도록 Android AR 클라이언트를 개발했습니다. 위경도와 고도, GIS 데이터를 사용자의 최초 GPS 위치를 기준으로 Unity 월드 좌표에 배치했습니다.',
-    challenge: '전체 GIS 데이터를 한 번에 로드하기 어려웠습니다. 또한 AR Foundation의 기본 Occlusion만으로는 지하 오브젝트와 지상 오브젝트가 자연스럽게 구분되지 않았습니다.',
-    approach: [
-      'CSV 배관 데이터를 읽어 100m 청크 prefab을 생성하는 Unity 에디터 스크립트를 작성하고, Addressables를 이용한 런타임 로딩을 구현했습니다.',
-      'ARCore 환경 깊이를 이용한 Occlusion과 Unity AI Inference Depth estimation을 이용한 Occlusion을 각각 구현해 지하 오브젝트와 지상 오브젝트를 구분했습니다.',
-      '카메라와 배관 사이의 거리에 따라 픽셀을 솎아내는 디더링 셰이더를 적용해, 배관 경계와 원거리 구간을 자연스럽게 표현했습니다.',
+    context: '굴착 전에 지하 배관의 위치와 깊이를 현장에서 확인할 수 있도록 만든 Android AR 클라이언트입니다. 위경도와 고도, GIS 데이터를 사용자의 최초 GPS 위치를 기준으로 Unity 월드 좌표에 배치했습니다. 배관 데이터는 도시 단위로 존재하는 반면 클라이언트는 현장 태블릿에서 동작해야 했고, 지하 오브젝트를 지면 아래에 보이게 하는 처리도 AR Foundation 기본 기능 밖에 있었습니다.',
+    builds: [
+      { label: '주변 청크 스트리밍', body: '지하 배관 데이터는 도시 단위로 존재하지만 현장에서 필요한 것은 사용자 주변 100m뿐입니다. CSV로 받은 위경도와 고도 데이터를 에디터 단계에서 100m 청크 prefab으로 미리 분할하는 Unity 에디터 스크립트를 만들었습니다. 런타임에는 사용자의 최초 GPS 위치를 원점으로 삼아 주변 청크만 Addressables로 로드하고, 사용자가 이동하면 새 청크를 불러오면서 멀어진 청크는 해제합니다.' },
+      { label: 'Occlusion 두 방식 구현', body: '지하 배관이 지면 아래에 있는 것처럼 보이려면 지상 물체가 배관을 가려야 합니다. ARCore 환경 깊이를 이용한 방식과 Unity AI Inference의 Depth estimation을 이용한 방식을 각각 구현해 현장에서 비교했습니다. AI 방식은 깊이 센서가 없는 기기에서도 동작하는 대신 태블릿에서 추론 비용이 컸습니다. 두 방식 모두 현장 동작을 확인했지만, 이후 요구사항이 바뀌면서 최종 제품에는 포함되지 않았습니다.' },
+      { label: '거리 기반 배관 표현', body: '깊이 정보만 적용하면 배관 경계가 잘려 현장에서 위치를 읽기 어려웠습니다. 카메라와 배관 사이의 거리에 따라 픽셀을 솎아내는 디더링 셰이더를 적용했습니다. 가까운 구간은 뚜렷하게, 먼 구간은 점차 사라지도록 처리해 굴착 지점 주변으로 시선이 모이도록 했습니다.' },
     ],
-    results: ['주변 100m 청크만 로드하는 구조를 구현하고, ARCore 환경 깊이와 Unity AI Inference를 이용한 Occlusion을 각각 구현해 현장에서 비교했습니다. 다만 이후 요구사항이 바뀌면서 최종 제품에는 Occlusion 기능이 포함되지 않았습니다.', '현장 검증을 포함한 PoC를 완료했고, 본사업 체결 이후 개발을 진행하고 있습니다.'],
     youtube: 'https://youtu.be/k6SDq25We3E',
     images: [{ src: '/portfolio-media/ar-pipeline-overview.jpg', caption: 'AR 지하 배관 클라이언트 현장 증강 화면. 굴착 구간의 배관과 함께 심도, 재질, 관경 정보를 표시했습니다.' }],
-    deepDive: [
+    buildDetails: [
       {
-        heading: '전체 GIS 데이터를 태블릿에 올릴 수 없다면',
-        body: '지하 배관 데이터는 도시 단위로 존재하지만, 현장에서는 사용자 주변 100m의 데이터만 필요했습니다. 이를 위해 CSV로 받은 위경도와 고도 데이터를 에디터 단계에서 100m 청크 prefab으로 미리 분할했습니다. 런타임에는 사용자의 최초 GPS 위치를 원점으로 삼아 주변 청크만 Addressables로 로드했습니다. 사용자가 이동해 필요한 청크가 바뀌면 새 청크를 로드하고 멀어진 청크는 해제했습니다.',
+        label: '주변 청크 스트리밍',
+        target: 0,
         diagram: {
           spec: {
             kind: 'flow',
@@ -214,8 +228,8 @@ update(user_latlon):
         },
       },
       {
-        heading: '두 가지 Occlusion 방식 구현 및 비교',
-        body: '지하 배관은 지면 아래에 보여야 하지만, 기본 설정만으로는 지면 위에 떠 있는 것처럼 보였습니다. ARCore 환경 깊이를 이용한 Occlusion과 Unity AI Inference Depth estimation을 이용한 Occlusion을 각각 구현해 현장에서 비교했습니다. AI 방식은 깊이 센서가 없는 기기에서도 동작한다는 장점이 있었지만, 태블릿 환경에서는 추론 비용이 컸습니다. 두 방식 모두 현장에서 동작을 확인했으나, 이후 요구사항이 바뀌면서 최종 제품에는 Occlusion 기능이 포함되지 않았습니다.',
+        label: 'Occlusion 두 방식 구현',
+        target: 1,
         diagram: {
           spec: {
             kind: 'split',
@@ -227,8 +241,8 @@ update(user_latlon):
         media: { kind: 'youtube', src: 'https://youtu.be/9B6yT9GSESI', caption: 'ARCore 환경 깊이 Occlusion과 Unity AI Inference Depth estimation Occlusion 비교 영상.' },
       },
       {
-        heading: '거리에 따른 배관 표현 조정',
-        body: '깊이 정보만 적용했을 때 배관 경계가 부자연스럽게 잘려 현장에서 위치를 확인하기 어려웠습니다. 카메라와 배관 사이의 거리에 따라 픽셀을 디더링으로 솎아내는 셰이더를 적용했습니다. 가까운 구간은 뚜렷하게 보이고 먼 구간은 점차 사라지도록 처리해, 굴착 지점 주변에 시선이 모이는 효과도 함께 얻었습니다.',
+        label: '거리 기반 배관 표현',
+        target: 2,
         media: { kind: 'youtube', src: 'https://youtu.be/k0-UH9v7Agw', caption: '거리 기반 디더링 셰이더를 적용한 배관 페이드 처리 영상.' },
         code: {
           label: '거리 기반 디더링 프래그먼트',
@@ -253,32 +267,28 @@ fragment(input):
   {
     slug: 'traffic-integrated-control',
     group: 'company',
-    number: '03',
     category: 'DIGITAL TWIN · CLIENT',
     period: '2024.06 — 2025.04',
     title: 'TOPES 통합 교통 관제 시스템',
     shortTitle: 'TOPES 교통 관제',
     summary: '스마트교차로 편집부터 VDS 차량 시각화와 교통 분석까지 처리하는 Windows 디지털 트윈 클라이언트를 개발했습니다.',
-    impact: 'GIS와 VDS 데이터를 2D/3D 관제 화면에 연동',
     role: 'Client Developer · Smart Intersection Owner',
     team: 'STANS · 3-PERSON TEAM',
     stack: ['Unity 2022.3', 'C#', 'TypeScript', 'SvelteKit', 'Tauri', 'Babylon.js', 'OpenLayers'],
-    context: '외부에서 개발된 Unity 교통 관제 프로젝트를 인수한 뒤, 기획 문서를 바탕으로 스마트교차로 기능을 처음부터 설계하고 직접 구현했습니다. 이후 SvelteKit·Tauri·Babylon.js 기반 클라이언트로 전환하면서 3D 교통 객체, 교통 분석, 차량 재생과 시뮬레이션 연동을 담당했습니다.',
-    challenge: '지도 픽셀과 GIS, CCTV, 엔진 월드 좌표를 하나의 교차로 모델로 연결해야 했습니다. 또한 VDS 검지가 끊긴 차량도 차선 흐름에 맞게 계속 표현해야 했습니다.',
-    approach: [
-      '기획 문서를 바탕으로 Unity 스마트교차로 편집 시스템을 처음부터 직접 구현했습니다. 교차로 영역과 도로, 차선, CCTV, 신호등을 배치하고 저장하는 기능을 담았습니다.',
-      'GIS 좌표와 Unity 좌표를 변환하고 VDS 패킷을 차량 표시와 이동에 연결했습니다. 검지가 끊긴 차량은 미리 작성한 차선 추적 경로를 따라 이동하도록 구성했습니다.',
-      'SvelteKit과 Babylon.js로 전환한 이후에는 2D 편집과 3D 차량 및 신호등 표시, 교통 분석, 차량 재생, 시뮬레이션 요청과 결과 처리를 담당했습니다.',
+    context: '외부에서 개발된 Unity 교통 관제 프로젝트를 인수한 뒤, 기획 문서를 바탕으로 스마트교차로 기능을 처음부터 설계하고 담당자로서 구현했습니다. 이후 클라이언트가 SvelteKit·Tauri·Babylon.js로 전환되면서 3D 교통 객체와 교통 분석, 차량 재생, 시뮬레이션 연동까지 이어서 맡았습니다. 하나의 교차로가 지도 픽셀과 GIS 위경도, 엔진 월드, CCTV 화면이라는 네 좌표계에 동시에 존재하는 것이 이 시스템의 조건이었습니다.',
+    builds: [
+      { label: '교차로 편집 시스템', body: '기획 문서를 바탕으로 교차로 영역과 도로, 차선, CCTV, 신호등을 배치하고 저장하는 편집 시스템을 처음부터 구현했습니다. 편집자가 지도에서 찍은 차선이 3D 화면의 차량 경로와 같은 위치를 가리켜야 하므로, 위경도를 단일 기준으로 삼고 지도 픽셀과 엔진 월드, CCTV 화면 좌표를 모두 그 위에서 변환하도록 정리했습니다.' },
+      { label: '검지 공백 차량 추적', body: 'VDS는 검지 지점을 지나는 차량만 알려주기 때문에 지점 사이 구간에서는 차량 정보가 들어오지 않습니다. 화면에서 차량이 사라졌다 다시 나타나면 관제 화면으로 쓰기 어렵다고 보고, 편집 단계에서 작성해 둔 차선 추적 경로를 이용해 검지가 끊긴 차량도 마지막으로 확인된 속도로 계속 이동시켰습니다. 다음 검지 시점에는 실제 데이터로 위치를 보정합니다.' },
+      { label: '스택 전환 후 모델 재사용', body: '프로젝트 도중 클라이언트 기술 스택이 Unity에서 SvelteKit과 Tauri, Babylon.js로 전환되었습니다. 이미 구현해 둔 편집 로직을 다시 만들지 않기 위해 좌표 변환과 교차로 데이터 모델은 그대로 옮기고 렌더링과 UI 계층만 교체했습니다. 전환 이후에는 새 스택 위에서 3D 교통 객체와 교통 분석, 차량 재생, 시뮬레이션 연동을 담당했습니다.' },
     ],
-    results: ['기획 문서에서 출발해 스마트교차로의 생성과 편집, 저장 흐름을 직접 구현했습니다.', 'VDS 차량 데이터를 지도와 3D 관제 화면에 표시하고, 검지가 끊긴 차량의 차선 추적을 구현했습니다.', '클라이언트 기술 전환 이후 교통 분석과 차량 재생, 시뮬레이션 연동 기능을 구현했습니다.'],
     images: [
       { src: '/portfolio-media/image1.png', caption: 'TOPES 통합 교통 관제 시스템 지도 화면.' },
       { src: '/portfolio-media/image2.png', caption: 'TOPES 통합 교통 관제 시스템 스마트교차로 3D 씬 화면.' },
     ],
-    deepDive: [
+    buildDetails: [
       {
-        heading: '네 개의 좌표계를 하나의 교차로 모델로 연결',
-        body: '이 시스템에서 하나의 교차로는 네 가지 좌표계로 동시에 존재했습니다. 편집 화면은 지도 픽셀, 실제 데이터는 위경도, 3D 관제 화면은 엔진 월드 좌표, CCTV 영상은 화면 좌표를 사용합니다. 편집자가 지도에서 찍은 차선이 3D 화면의 차량 경로와 같은 위치를 가리키려면 변환이 일관되어야 했습니다. 그래서 위경도를 단일 기준으로 삼고, 나머지 좌표계는 모두 그 위에서 변환하도록 정리했습니다.',
+        label: '교차로 편집 시스템',
+        target: 0,
         diagram: {
           spec: {
             kind: 'layers',
@@ -293,8 +303,8 @@ fragment(input):
         },
       },
       {
-        heading: '검지가 끊긴 차량의 이동 유지',
-        body: 'VDS는 검지 지점을 지나는 차량만 알려주기 때문에, 지점 사이 구간에서는 차량 정보가 들어오지 않았습니다. 화면에서 차량이 사라졌다 다시 나타나면 관제 화면으로 사용하기 어렵다고 판단했습니다. 편집 단계에서 작성해 둔 차선 추적 경로를 이용해, 검지가 끊긴 차량도 마지막으로 확인된 속도로 경로를 따라 계속 이동시켰습니다. 다음 검지 시점에는 실제 데이터로 위치를 보정했습니다.',
+        label: '검지 공백 차량 추적',
+        target: 1,
         diagram: {
           spec: {
             kind: 'flow',
@@ -332,8 +342,8 @@ tick(dt):
         },
       },
       {
-        heading: '기술 스택 전환 과정에서의 기능 유지',
-        body: '프로젝트 도중 클라이언트 기술 스택이 Unity에서 SvelteKit과 Tauri, Babylon.js로 전환되었습니다. 이미 구현해 둔 스마트교차로 편집 로직을 다시 만들지 않기 위해, 좌표 변환과 교차로 데이터 모델을 그대로 옮기고 렌더링과 UI 계층만 교체했습니다. 전환 이후에는 새 스택 위에서 3D 교통 객체와 교통 분석, 차량 재생, 시뮬레이션 연동을 담당했습니다.',
+        label: '스택 전환 후 모델 재사용',
+        target: 2,
         diagram: {
           spec: {
             kind: 'split',
@@ -348,28 +358,29 @@ tick(dt):
   {
     slug: 'ar-fire-training',
     group: 'company',
-    number: '04',
     category: 'MOBILE AR · SIMULATION',
     period: '2024.11 — 2025.05',
     title: '표준작전절차 기반 AR 화재진압 훈련',
     shortTitle: 'AR 화재진압 훈련',
     summary: 'Unreal Engine 5로 Android AR 화재 진압 훈련 앱을 개발했습니다. JSON 시나리오 데이터와 단계 기반 진행 로직으로 화재 진압 상호작용과 퀴즈, 성공 및 실패 분기를 구현했습니다.',
-    impact: 'JSON 시나리오 구조 · Galaxy Tab S8 검증',
     role: 'Android Client Developer',
     team: 'STANS · 3 DEV + PM + 3D ARTIST',
     stack: ['Unreal Engine 5.4', 'C++', 'Android', 'AR', 'JSON'],
-    context: '소방청 화재 진압 교육을 모바일 AR에서 제공하기 위한 Android 클라이언트를 Unreal Engine 5와 C++로 개발했습니다. JSON 시나리오 데이터를 읽어 런타임에 훈련 액터를 생성하고 직접 설계한 단계 기반 진행 로직으로 연결했습니다.',
-    challenge: '훈련 절차에 맞춰 애니메이션과 이벤트, 퀴즈 선택지를 순서대로 진행해야 했습니다. 또한 화재 진압 상호작용과 교육 자료를 모바일 UI에서 제공해야 했습니다.',
-    approach: ['scenario.json을 UObject 그래프로 변환해 런타임에 시나리오 액터를 생성했습니다. 단계 번호와 완료 상태를 관리하는 진행 흐름은 직접 설계해 구현했습니다.', '곡선형 충돌체를 발사해 일정 시간 이상 화재 대상과 접촉하면 불이 꺼지는 상호작용을 개발했습니다.', 'C++와 Widget Blueprint로 설정과 시나리오, 퀴즈, 성공 및 실패 UI를 제작하고 이미지 기반 PDF 뷰어를 구현했습니다.'],
-    results: ['Galaxy Tab S8 실기기에서 구동을 확인하고 프로젝트를 납품했습니다.', 'JSON 시나리오와 단계별 진행 흐름, 성공 및 실패 분기 구조를 구현했습니다.'],
+    context: '소방청 화재 진압 교육을 모바일 AR에서 제공하기 위해 Unreal Engine 5와 C++로 만든 Android 클라이언트입니다. 소방 표준작전절차는 훈련 과목마다 단계와 순서가 다르기 때문에, 절차를 코드가 아니라 데이터로 기술하고 그 위에서 애니메이션과 이벤트, 퀴즈가 순서대로 진행되도록 구성했습니다. 최종 구동은 Galaxy Tab S8 실기기에서 확인했습니다.',
+    builds: [
+      { label: '시나리오 데이터 구조', body: '훈련 절차를 코드에 직접 넣으면 과목이 추가될 때마다 클라이언트를 다시 빌드해야 합니다. 훈련 절차 전체를 scenario.json으로 기술하고, 실행 시 이 데이터를 UObject 그래프로 변환한 뒤 필요한 액터를 런타임에 생성했습니다. 새 훈련 과목은 JSON 파일을 추가하는 것으로 대응할 수 있고 코드는 수정하지 않아도 됩니다.' },
+      { label: '단계 진행 로직', body: '훈련 프로그램인 만큼 절차를 건너뛸 수 없어야 했습니다. 현재 단계 번호와 완료 조건을 관리하는 진행 로직을 직접 설계했고, 각 단계는 완료 이벤트를 받기 전까지 다음 단계로 넘어가지 않습니다. 제한 시간 초과나 오답처럼 실패 조건이 먼저 성립하면 즉시 실패 분기로 이동해, 훈련생이 어느 절차에서 어긋났는지 바로 확인할 수 있습니다.' },
+      { label: '소화기 분사 상호작용', body: '소화기 분사를 직선 레이캐스트로 처리하면 실제 사용 감각과 맞지 않습니다. 중력의 영향을 받는 곡선 충돌체를 발사하고, 이 충돌체가 화재 대상과 일정 시간 이상 접촉해야 불이 꺼지도록 구현했습니다. 스치듯 조준해서는 진화되지 않으므로 훈련생은 대상을 계속 겨누는 조작을 하게 됩니다.' },
+      { label: '훈련 UI와 교육 자료', body: 'C++와 Widget Blueprint로 설정과 시나리오, 퀴즈, 성공 및 실패 UI를 제작하고 이미지 기반 PDF 뷰어를 구현해 교육 자료를 앱 안에서 볼 수 있게 했습니다.' },
+    ],
     images: [
       { src: '/portfolio-media/image3.png', caption: 'AR 화재진압 훈련 시뮬레이터 실행 화면.' },
       { src: '/portfolio-media/image4.png', caption: 'AR 화재진압 훈련 화재 상호작용 화면.' },
     ],
-    deepDive: [
+    buildDetails: [
       {
-        heading: '훈련 시나리오를 코드가 아닌 데이터로 분리',
-        body: '소방 표준작전절차는 훈련 과목마다 단계와 순서가 다릅니다. 이를 코드에 직접 넣으면 과목이 추가될 때마다 클라이언트를 다시 빌드해야 합니다. 훈련 절차 전체를 scenario.json으로 기술하고, 실행 시 이 데이터를 UObject 그래프로 변환한 뒤 필요한 액터를 런타임에 생성했습니다. 새 훈련 과목은 JSON 파일을 추가하는 것으로 대응할 수 있고, 코드는 수정하지 않아도 됩니다.',
+        label: '시나리오 데이터 구조',
+        target: 0,
         diagram: {
           spec: {
             kind: 'flow',
@@ -417,8 +428,8 @@ tick(dt):
         },
       },
       {
-        heading: '절차를 건너뛸 수 없게 만든 진행 로직',
-        body: '훈련 프로그램인 만큼 절차를 건너뛸 수 없어야 했습니다. 그래서 현재 단계 번호와 완료 조건을 관리하는 진행 로직을 직접 설계했고, 각 단계는 완료 이벤트를 받기 전까지 다음 단계로 넘어가지 않게 했습니다. 제한 시간 초과나 오답처럼 실패 조건이 먼저 성립하면 즉시 실패 분기로 이동합니다. 훈련생이 어느 절차에서 어긋났는지 바로 확인할 수 있습니다.',
+        label: '단계 진행 로직',
+        target: 1,
         diagram: {
           spec: {
             kind: 'sequence',
@@ -434,8 +445,8 @@ tick(dt):
         },
       },
       {
-        heading: '소화기 분사 상호작용 구현',
-        body: '소화기 분사를 직선 레이캐스트로 처리하면 실제 사용 감각과 맞지 않았습니다. 중력의 영향을 받는 곡선 충돌체를 발사하고, 이 충돌체가 화재 대상과 일정 시간 이상 접촉해야 불이 꺼지도록 구현했습니다. 스치듯 조준해서는 진화되지 않으므로, 훈련생은 대상을 계속 겨누는 조작을 하게 됩니다.',
+        label: '소화기 분사 상호작용',
+        target: 2,
         diagram: {
           spec: {
             kind: 'flow',
@@ -455,51 +466,44 @@ tick(dt):
   {
     slug: 'awas-xr',
     group: 'company',
-    number: '05',
     category: 'HOLOLENS 2 · MR TRAINING',
     period: '2023.12 — 2024.05',
     title: 'AWAS-XR 공정 교육 시나리오 제작 프로그램',
     shortTitle: 'AWAS-XR',
     summary: 'HoloLens 2에서 MR 공정 교육 콘텐츠를 제작하고 실행하는 Unity 클라이언트를 개발했습니다.',
-    impact: 'UGUI 전환 · Grab 시스템 · 모델 로딩 분 단위에서 초 단위로 단축',
     role: 'HoloLens 2 Client Developer',
     team: 'STANS · CLIENT DEVELOPMENT',
     stack: ['Unity', 'C#', 'HoloLens 2', 'UGUI', 'Job System', 'Shader'],
-    context: 'HoloLens 2에서 MR 공정 교육 시나리오를 제작하고 실행하는 Unity 클라이언트를 개발했습니다. UI, 가상 물체 조작, 대형 모델 로딩과 디바이스용 셰이더를 담당했습니다.',
-    challenge: 'HoloLens 2의 입력과 시야, 성능 제약 안에서 UI와 3D 상호작용을 안정적으로 제공해야 했습니다. 또한 대형 모델을 로딩하는 흐름도 개선해야 했습니다.',
-    approach: [
-      'Color Picker와 User Menu를 제작했습니다. 또한 HoloLens 2의 입력 제약 안에서 안정적으로 동작하도록 프로젝트 전체 UI를 Physics-based 방식에서 UGUI로 전환했습니다.',
-      '가상공간 물체를 잡고 조작하는 Grab 시스템과 HoloLens 2용 Outline Shader를 구현했습니다.',
-      'Unity Job System을 적용해 대형 모델 로딩 병목을 개선했습니다. 분 단위였던 로딩 시간이 초 단위로 줄었습니다.',
+    context: 'HoloLens 2에서 MR 공정 교육 시나리오를 제작하고 실행하는 Unity 클라이언트입니다. UI와 가상 물체 조작, 대형 모델 로딩, 디바이스용 셰이더를 담당했습니다. 손 제스처와 좁은 시야, 온디바이스 성능이라는 HoloLens 2의 조건 위에서 조작과 표현을 다시 설계해야 했습니다.',
+    builds: [
+      { label: 'UGUI 전환', body: '기존 UI는 물리 충돌을 이용한 Physics-based 방식이라 손 제스처 입력에서 오작동이 잦았습니다. 프로젝트 전체 UI를 UGUI로 전환해 입력 처리를 일원화하고, 그 위에서 Color Picker와 User Menu를 제작했습니다.' },
+      { label: '대형 모델 로딩 단축', body: '공정 교육에 쓰는 모델은 폴리곤 수가 많아 로딩 중 화면이 멈추는 구간이 길었습니다. Unity Job System을 적용해 로딩 작업을 메인 스레드 밖으로 분산했고, 분 단위였던 로딩 시간이 초 단위로 줄었습니다.' },
+      { label: 'Grab 시스템과 셰이더', body: '가상공간 물체를 잡고 옮기고 회전시키는 Grab 시스템을 구현했습니다. 함께 만든 Outline Shader는 HoloLens 2의 렌더링 비용을 고려해 후처리 대신 단일 패스로 처리했습니다.' },
     ],
-    results: ['프로젝트 전체 UI를 UGUI로 전환하고 MR 교육 콘텐츠의 조작 흐름을 구현했습니다.', 'Grab 시스템과 Outline Shader를 구현했고, Job System을 적용해 대형 모델 로딩 시간을 분 단위에서 초 단위로 줄였습니다.'],
     images: [{ src: '/portfolio-media/image5.png', caption: 'AWAS-XR HoloLens 2 공정 교육 화면.' }],
   },
   {
     slug: 'land400-hums',
     group: 'company',
-    number: '06',
     category: 'EMBEDDED · RELIABILITY',
     period: '2023.06 — 2023.12',
     title: 'LAND400 Phase3 AS9 & AS10 HUMS',
     shortTitle: 'LAND400 HUMS',
     summary: 'Health and Usage Monitoring System의 Linux SBC 소프트웨어를 재설계했습니다. 데이터 처리 구조와 UDP 패킷 복구 기능을 구현했습니다.',
-    impact: '20ms 간격 데이터 처리 · 수락시험 통과',
     role: 'HUMS SBC Software Engineer',
     team: 'DANAM SYSTEMS · EMBEDDED DEVELOPMENT',
     stack: ['C', 'Linux', 'SBC', 'Message Queue', 'UDP', 'Helix QAC', 'SureSoft Cover'],
-    context: 'LAND400 상태감시시스템의 HUMS SBC 소프트웨어를 C와 Linux 환경에서 설계하고 구현했습니다. 1만 줄 이상의 단일 파일로 되어 있던 기존 코드를 수신과 정제, 저장 파이프라인으로 재구성했습니다.',
-    challenge: '납품 일정과 20ms 간격 데이터 처리 요구를 만족해야 했습니다. 동시에 기존 구조의 유지보수 문제와 UDP 통신 중 발생하는 패킷 누락도 해결해야 했습니다.',
-    approach: [
-      '데이터 수신과 정제, 저장 기능을 각각 독립 프로세스로 분리하고 Message Queue로 연결했습니다.',
-      '타임스탬프와 패킷 번호를 기준으로 UDP 누락을 감지하고, 데이터 수집 장치에 재요청하는 구조를 구현했습니다.',
-      'Helix QAC와 SureSoft Cover를 이용한 정적 검사와 동적 검사를 수행하고 수락시험에 대응했습니다.',
+    context: 'LAND400 상태감시시스템의 HUMS SBC 소프트웨어를 C와 Linux 환경에서 설계하고 구현했습니다. 인수받은 코드는 수신과 정제, 저장이 1만 줄 이상의 단일 파일 안에 함께 들어 있었고, 상태감시 데이터는 20ms 간격으로 계속 들어옵니다. 납품 일정과 수락시험이 정해진 상태에서 이 구조 위에 기능을 더하는 대신 파이프라인으로 다시 나누는 쪽을 택했습니다.',
+    builds: [
+      { label: '멀티프로세스 재구성', body: '한 곳을 수정하면 다른 기능이 영향을 받아 수락시험을 앞두고 손대기 어려운 상태였습니다. 수신과 정제, 저장 세 기능을 각각 독립 프로세스로 분리하고 Message Queue로만 연결해, 프로세스 사이의 접점을 메시지 형식 하나로 정리했습니다. 저장 단계에서 지연이 발생해도 수신 프로세스는 영향을 받지 않습니다.' },
+      { label: '20ms 처리 파이프라인', body: '상태감시 데이터는 20ms 간격으로 들어오기 때문에 이 주기를 놓치면 그대로 데이터 결손이 됩니다. 수신 프로세스는 데이터를 읽어 큐에 넣는 일만 하도록 최소화하고, 시간이 걸리는 정제와 디스크 저장은 뒤쪽 프로세스에서 처리하도록 했습니다. 각 단계 사이의 큐가 완충 역할을 해 일시적인 저장 지연이 수신 주기에 영향을 주지 않습니다.' },
+      { label: '패킷 누락 복구', body: 'UDP는 전달을 보장하지 않아 수집 장치가 보낸 패킷이 유실될 수 있고, 상태감시 기록에서 데이터 결손은 그 자체로 결함이 됩니다. 타임스탬프와 패킷 번호의 연속성을 검사해 빠진 구간을 찾아내고 해당 구간만 수집 장치에 다시 요청했습니다. 재요청으로 받은 데이터는 원래 순서에 맞춰 삽입해 기록의 시간 순서를 유지합니다.' },
+      { label: '정적·동적 검사 대응', body: 'Helix QAC와 SureSoft Cover로 정적 검사와 동적 검사를 수행하고 지적 사항을 반영했습니다. 재구성한 소프트웨어는 전 장비 수락시험을 통과했습니다.' },
     ],
-    results: ['1만 줄 이상의 단일 파일 코드를 멀티프로세스와 Message Queue 구조로 재구성했습니다.', '20ms 간격 데이터 처리 기반과 UDP 패킷 누락 감지 및 재요청 구조를 구현했습니다.', '정적 검사와 동적 검사를 거쳐 전 장비 수락시험을 통과했고, 납품 일정을 지켰습니다.'],
-    deepDive: [
+    buildDetails: [
       {
-        heading: '단일 파일 구조를 세 개의 프로세스로 분리',
-        body: '인수받은 HUMS 소프트웨어는 수신과 정제, 저장이 1만 줄 이상의 단일 파일 안에 함께 들어 있었습니다. 한 곳을 수정하면 다른 기능이 영향을 받아, 수락시험을 앞두고 손대기 어려운 상태였습니다. 이를 위해 세 가지 기능을 각각 독립 프로세스로 분리하고 Message Queue로만 연결해, 프로세스 사이의 접점을 메시지 형식 하나로 정리했습니다. 그 결과 저장 단계에서 지연이 발생해도 수신 프로세스는 영향을 받지 않게 되었습니다.',
+        label: '멀티프로세스 재구성',
+        target: 0,
         diagram: {
           spec: {
             kind: 'split',
@@ -510,8 +514,8 @@ tick(dt):
         },
       },
       {
-        heading: '20ms 주기를 유지하기 위한 파이프라인 구성',
-        body: '상태감시 데이터는 20ms 간격으로 들어오기 때문에, 이 주기를 놓치면 그대로 데이터 결손이 됩니다. 수신 프로세스는 데이터를 읽어 큐에 넣는 일만 하도록 최소화하고, 시간이 걸리는 정제와 디스크 저장은 뒤쪽 프로세스에서 처리하도록 했습니다. 각 단계 사이의 큐가 완충 역할을 해, 일시적인 저장 지연은 수신 주기에 영향을 주지 않습니다.',
+        label: '20ms 처리 파이프라인',
+        target: 1,
         diagram: {
           spec: {
             kind: 'flow',
@@ -527,8 +531,8 @@ tick(dt):
         },
       },
       {
-        heading: '누락된 패킷 감지와 재요청',
-        body: 'UDP는 전달을 보장하지 않기 때문에 데이터 수집 장치가 보낸 패킷이 유실될 수 있습니다. 상태감시 기록에서 데이터 결손은 그 자체로 결함이 되므로 그대로 둘 수 없었습니다. 그래서 타임스탬프와 패킷 번호의 연속성을 검사해 빠진 구간을 찾아내고, 해당 구간만 수집 장치에 다시 요청하는 구조를 구현했습니다. 재요청으로 받은 데이터는 원래 순서에 맞춰 삽입해 기록의 시간 순서를 유지했습니다.',
+        label: '패킷 누락 복구',
+        target: 2,
         diagram: {
           spec: {
             kind: 'sequence',
@@ -571,24 +575,19 @@ periodic_check():
   {
     slug: 'pearl-abyss-red-desert',
     group: 'company',
-    number: '07',
     category: 'GAME · UI/UX',
     period: '2023.03 — 2023.05',
     title: '붉은사막',
     shortTitle: '붉은사막 UI',
     summary: '펄어비스 블랙스페이스 엔진에서 HTML/CSS와 C++ 컨트롤러를 이용해 PC 게임 UI와 디버깅 도구를 개발했습니다.',
-    impact: '원형 퀵슬롯 UI · 월드맵 디버깅 UI',
     role: 'UI Developer · Intern',
     team: 'PEARL ABYSS · NEW PROJECT',
     stack: ['C++', 'HTML', 'CSS', '블랙스페이스 엔진'],
-    context: '펄어비스 블랙스페이스 엔진으로 개발하는 PC 게임 붉은사막에 UI 개발 인턴으로 참여했습니다. 자체 엔진의 UI 구조를 파악한 뒤 HTML/CSS와 C++ 컨트롤러를 연결해 키보드와 마우스 기반 기능을 구현했습니다.',
-    challenge: '인턴 기간 안에 자체 엔진의 UI 처리 흐름을 파악해야 했습니다. 그리고 플레이어용 UI와 콘텐츠 제작자를 위한 디버깅 UI를 기존 엔진 구조에 맞춰 구현해야 했습니다.',
-    approach: [
-      'HTML/CSS로 원형 퀵슬롯 UI를 구성하고, C++ 컨트롤러로 키보드와 마우스 입력을 캐릭터 및 장비 변경에 연결했습니다.',
-      '전체 월드맵의 오브젝트를 핀으로 표시해 지역별 분포와 밀집 상태를 확인하는 디버깅 UI를 구현했습니다.',
-      '기존 자체 엔진의 처리 흐름을 파악한 뒤 개발 PD의 피드백을 반영해 기능을 정리했습니다.',
+    context: '펄어비스 블랙스페이스 엔진으로 개발하는 PC 게임 붉은사막에 UI 개발 인턴으로 참여했습니다. 이 엔진은 화면을 HTML/CSS로 기술하고 동작은 C++ 컨트롤러로 연결하는 구조라, 먼저 엔진의 UI 처리 흐름을 파악한 뒤 그 위에서 플레이어용 UI와 콘텐츠 제작자용 도구를 만들었습니다.',
+    builds: [
+      { label: '원형 퀵슬롯 UI', body: 'HTML/CSS로 원형 퀵슬롯을 구성하고, C++ 컨트롤러로 키보드와 마우스 입력을 캐릭터 및 장비 변경에 연결했습니다.' },
+      { label: '월드맵 디버깅 UI', body: '콘텐츠 제작자가 오브젝트 배치를 눈으로 확인할 수단이 없었습니다. 전체 월드맵의 오브젝트를 핀으로 표시해 지역별 분포와 밀집 상태를 한 화면에서 볼 수 있는 디버깅 UI를 만들었고, 개발 PD로부터 디버깅에 도움이 되었다는 피드백을 받았습니다.' },
     ],
-    results: ['키보드와 마우스로 조작하는 원형 퀵슬롯을 구현하고 캐릭터 및 장비 변경 처리를 연결했습니다.', '월드맵 오브젝트의 밀집 상태를 확인할 수 있는 디버깅 UI를 구현했습니다.', '개발 PD로부터 디버깅에 도움이 되었다는 피드백을 받았습니다.'],
     images: [
       { src: '/portfolio-media/image6.png', caption: '붉은사막 퀵슬롯 UI 화면.' },
       { src: '/portfolio-media/image7.png', caption: '붉은사막 적 체력 UI 화면.' },
@@ -597,33 +596,30 @@ periodic_check():
   {
     slug: 'project-lup',
     group: 'personal',
-    number: '08',
     category: 'UNITY · AI · SOLO PROJECT',
     period: '2022.12.12 — 2023.02.17',
     title: 'Project LUP',
     shortTitle: 'PROJECT LUP',
     summary: 'Behavior Tree로 자동 전투 AI를 구현하고 스킬과 타겟을 동적으로 결정하도록 만든 1인 방치형 RPG 프로젝트입니다.',
-    impact: '자동 전투 AI · Behavior Tree Debugger · Shader UI',
     role: 'Solo Developer',
     team: '1-PERSON PROJECT',
     stack: ['Unity', 'C#', 'Behavior Tree', 'Shader Graph', 'IMGUI'],
-    context: '자동 전투를 중심으로 캐릭터가 전투 상황에 따라 스킬과 타겟을 선택하는 Unity 기반 방치형 RPG를 기획부터 구현까지 혼자 개발했습니다.',
-    challenge: '스킬 범위와 회복 필요성 같은 조건에 따라 행동을 선택해야 했습니다. 또한 MonoBehaviour가 아닌 Behavior Tree 노드의 상태를 런타임에 확인할 방법이 필요했습니다.',
-    approach: [
-      'OnStart와 OnUpdate, OnStop 흐름을 가진 Behavior Tree 노드 구조를 만들었습니다. 그리고 트리를 재귀 순회해 노드별 반환 상태를 화면에 출력하는 Behavior Tree Debugger를 구현했습니다.',
-      'SkillSlot과 SkillSet, SkillActionNode를 조합해 전투 상황에 따라 스킬과 공격 및 회복 타겟을 동적으로 결정하도록 구성했습니다.',
-      '캐릭터 수가 늘어날 때 발생하는 UGUI Draw Call 증가를 줄이기 위해 Shader로 Health Bar를 구현했고, 전투 카메라의 추적과 흔들림도 함께 제작했습니다.',
+    context: '캐릭터가 전투 상황에 따라 스킬과 타겟을 스스로 고르는 자동 전투를 중심에 둔 Unity 방치형 RPG로, 기획부터 구현까지 혼자 만들었습니다. 자동 전투는 조건이 늘어날수록 상태 기계로 관리하기 어려워지기 때문에 Behavior Tree를 직접 만들고, 그 위에 스킬 선택과 디버깅 도구, 전투 표현을 얹었습니다.',
+    builds: [
+      { label: 'Behavior Tree 자동 전투', body: '모든 노드가 OnStart와 OnUpdate, OnStop이라는 같은 생명주기를 갖고 Running과 Success, Failure 중 하나를 반환하도록 규칙을 통일했습니다. Selector와 Sequence 같은 합성 노드는 이 규칙만 알면 어떤 자식 노드든 조합할 수 있습니다. 새 행동을 추가할 때 건드리는 것은 트리 구조뿐이고 노드 구현은 그대로 둡니다.' },
+      { label: '스킬·타겟 결정 구조', body: '전투 중 캐릭터는 어떤 스킬을 쓸지와 누구에게 쓸지를 함께 결정해야 합니다. 이 둘을 한 노드에 넣지 않고 보유 스킬을 담는 SkillSlot, 사용 조건을 판단하는 SkillSet, 실제 시전을 수행하는 SkillActionNode로 나눴습니다. 타겟 규칙은 스킬 종류에 따라 달라서, 회복 스킬은 아군 중 체력 비율이 가장 낮은 대상을, 공격 스킬은 사거리 안의 대상을 고릅니다.' },
+      { label: 'Behavior Tree 디버거', body: 'Behavior Tree 노드는 MonoBehaviour가 아닌 순수 C# 객체라 인스펙터에 나타나지 않습니다. 어떤 노드가 왜 실패했는지 볼 방법이 없어 디버거를 직접 만들었습니다. 루트부터 재귀로 순회하며 노드 깊이만큼 들여쓴 한 줄 문자열을 만들어 두고 매 프레임 IMGUI로 출력합니다. 성공은 파랑, 실패는 빨강, 진행 중은 노랑, 미진입은 회색으로 칠해 어느 가지에서 판단이 끊겼는지 화면에서 바로 확인합니다.' },
+      { label: 'Shader 체력 바', body: '체력 바를 UGUI로 만들면 캐릭터마다 이미지가 여러 개 붙어, 다수가 등장하는 방치형 전투에서는 Draw Call이 늘어납니다. 체력 바를 Shader Graph로 옮기고 하나의 머티리얼이 체력 비율인 BarValue만 프로퍼티로 받아 그리도록 바꿨습니다. UV의 x좌표와 BarValue를 Step으로 비교해 채운 색과 빈 색을 정하고, 카메라와의 거리를 알파에 반영해 멀리 있는 캐릭터의 체력 바는 점차 사라집니다. 전투 카메라의 추적과 흔들림도 함께 만들었습니다.' },
     ],
-    results: ['전투 상황에 따라 스킬과 타겟을 자동으로 결정하는 흐름을 구현했습니다.', '직접 만든 디버거로 Behavior Tree 노드의 반환 상태를 실행 중에 확인할 수 있었습니다.', 'Shader Health Bar와 전투 카메라 시스템을 구현해 전투 화면의 가독성과 연출을 구성했습니다.'],
     youtube: 'https://youtu.be/9gVlJFajaxc',
     images: [
       { src: '/portfolio-media/image8.jpeg', caption: 'Project LUP 전투 대기 화면.' },
       { src: '/portfolio-media/image23.png', caption: 'Project LUP 전투 중 스킬 연출 화면.' },
     ],
-    deepDive: [
+    buildDetails: [
       {
-        heading: 'Behavior Tree 노드 구조 설계',
-        body: '방치형 RPG의 자동 전투는 조건이 늘어날수록 상태 기계로 관리하기 어려워집니다. 모든 노드가 OnStart와 OnUpdate, OnStop이라는 같은 생명주기를 갖고 Running과 Success, Failure 중 하나를 반환하도록 규칙을 통일했습니다. Selector와 Sequence 같은 합성 노드는 이 규칙만 알면 어떤 자식 노드든 조합할 수 있게 만들었습니다. 그 결과 새 행동을 추가할 때는 트리 구조만 변경하면 되었습니다.',
+        label: 'Behavior Tree 자동 전투',
+        target: 0,
         diagram: {
           spec: {
             kind: 'tree',
@@ -726,8 +722,8 @@ periodic_check():
         },
       },
       {
-        heading: '스킬과 타겟을 결정하는 구조 분리',
-        body: '전투 중 캐릭터는 어떤 스킬을 사용할지와 누구에게 사용할지를 함께 결정해야 했습니다. 이 두 가지를 하나의 노드에 넣지 않고, 보유 스킬을 담는 SkillSlot과 사용 조건을 판단하는 SkillSet, 실제 시전을 수행하는 SkillActionNode로 분리했습니다. 타겟 선택 규칙은 스킬 종류에 따라 다르게 적용했습니다. 회복 스킬은 아군 중 체력 비율이 가장 낮은 대상을, 공격 스킬은 사거리 안의 대상을 선택하도록 구현했습니다.',
+        label: '스킬·타겟 결정 구조',
+        target: 1,
         diagram: {
           spec: {
             kind: 'flow',
@@ -793,8 +789,8 @@ periodic_check():
         },
       },
       {
-        heading: 'Behavior Tree 상태 확인용 디버거 제작',
-        body: 'Behavior Tree 노드는 MonoBehaviour가 아니라 순수 C# 객체이기 때문에 인스펙터에 표시되지 않았습니다. 어떤 노드가 왜 실패했는지 확인할 방법이 없어 디버거를 직접 만들었습니다. 루트부터 재귀로 순회하면서 노드 깊이만큼 들여쓴 한 줄 문자열을 만들어 두고, 매 프레임 IMGUI로 그 목록을 출력했습니다. 반환 상태에 따라 성공은 파랑, 실패는 빨강, 진행 중은 노랑, 아직 진입하지 않은 노드는 회색으로 표시해 어느 가지에서 판단이 끊겼는지 화면에서 바로 확인할 수 있게 했습니다.',
+        label: 'Behavior Tree 디버거',
+        target: 2,
         diagram: {
           spec: {
             kind: 'flow',
@@ -844,8 +840,8 @@ public static void OnGUI()
         },
       },
       {
-        heading: '캐릭터 수 증가에 따른 Draw Call 문제 해결',
-        body: '체력 바를 UGUI로 만들면 캐릭터마다 이미지가 여러 개 추가되어, 다수의 캐릭터가 등장하는 방치형 전투에서는 Draw Call이 늘어났습니다. 체력 바를 Shader Graph로 옮기고, 하나의 머티리얼이 체력 비율인 BarValue만 프로퍼티로 받아 그리도록 변경했습니다. UV의 x좌표와 BarValue를 Step으로 비교해 채운 색과 빈 색을 결정하고, 테두리는 Rectangle 노드로 만들어 합성했습니다. 또한 카메라와의 거리를 MaxFadDistance로 나눈 값을 알파에 반영해, 멀리 있는 캐릭터의 체력 바는 점차 사라집니다.',
+        label: 'Shader 체력 바',
+        target: 3,
         diagram: {
           spec: {
             kind: 'flow',
@@ -865,34 +861,30 @@ public static void OnGUI()
   {
     slug: 'deus-ex-machina',
     group: 'personal',
-    number: '09',
     category: 'UNITY · MULTIPLAYER · PVP',
     period: '2022.09 — 2022.12',
     title: 'Deus Ex Machina',
     shortTitle: 'DEUS EX MACHINA',
     summary: '프로그래머 3명과 기획자 5명이 함께 만든 1:4 비대칭 PVP 게임입니다. 계정과 네트워크, 상호작용 시스템을 담당했습니다.',
-    impact: '계정 및 네트워크 · Interaction · Casting',
     role: 'Client Programmer',
     team: '8-PERSON TEAM · 3 PROGRAMMERS / 5 DESIGNERS',
     stack: ['Unity', 'C#', 'Photon', 'Google Apps Script', 'Google Sheets'],
-    context: '퇴마사와 악령이 들린 인형 진영이 서로 다른 목표를 수행하는 5인 멀티플레이 게임을 프로그래머 3명과 기획자 5명으로 제작했습니다.',
-    challenge: 'DBMS를 사용할 수 없는 환경에서 계정과 접속 로그를 관리해야 했습니다. 또한 Photon 플레이어 데이터를 공유하고, 여러 곳에서 재사용할 수 있는 상호작용과 캐스팅 구조를 만들어야 했습니다.',
-    approach: [
-      'Google Sheets를 저장소로 사용하는 Apps Script 엔드포인트를 직접 작성했습니다. Unity 클라이언트에서는 UnityWebRequest로 JSON을 주고받아 계정 등록과 로그인, 로그아웃을 연동했습니다.',
-      'Photon API의 데이터 공유 과정을 Facade 형태의 DataManager로 감싸, 플레이어 데이터를 수정하고 공유하는 흐름을 정리했습니다.',
-      'IInteractable을 이용한 상호작용 탐색과 UI 표시를 구현했습니다. 또한 진행 속도를 담는 Cast와 시점별 동작을 담는 CastFuncSet을 조합하는 공통 캐스팅 시스템을 만들었습니다.',
+    context: '퇴마사와 악령이 들린 인형 진영이 서로 다른 목표를 수행하는 5인 멀티플레이 게임으로, 프로그래머 3명과 기획자 5명이 함께 만들었습니다. 서버와 데이터베이스를 운영할 수 없는 환경이었고, 기획이 계속 늘어나는 상호작용을 매번 새로 만들지 않아도 되는 구조가 필요했습니다. 계정과 네트워크, 상호작용 시스템을 맡았습니다.',
+    builds: [
+      { label: '시트 기반 계정 시스템', body: 'DBMS를 쓸 수 없었지만 멀티플레이 게임에는 계정과 접속 기록이 필요했습니다. Google Sheets를 저장소로 쓰고 Apps Script를 웹 엔드포인트로 배포해 서버 역할을 대신하게 했습니다. Unity 클라이언트는 UnityWebRequest로 JSON을 주고받으며 등록과 로그인, 로그아웃을 처리합니다. 기획자들도 시트에서 계정과 로그를 바로 확인할 수 있었습니다.' },
+      { label: '공통 캐스팅 시스템', body: '인형 조사와 문 열기, 의식 진행처럼 형태는 달라도 구조가 같은 상호작용이 반복해서 등장했습니다. 대상을 보면 안내가 뜨고, 일정 시간 키를 누르면 완료되고, 중간에 놓으면 취소되는 흐름입니다. IInteractable로 탐색과 UI 표시를 통일하고 캐스팅은 두 구조체로 나눴습니다. Cast는 게이지 속도와 목표치, 쿨타임만 담고 CastFuncSet은 진행 조건과 진행·중단·완료 동작을 선택적으로 담습니다. 새 상호작용은 필요한 콜백만 넘기면 되고, 같은 오브젝트를 진영마다 다른 속도와 완료 동작으로 다루는 경우도 같은 시스템으로 처리됩니다.' },
+      { label: 'Photon 데이터 창구', body: 'Photon의 커스텀 프로퍼티는 어디서든 읽고 쓸 수 있어 편리한 대신, 여러 시스템이 각자 접근하면 어떤 코드가 어떤 값을 언제 바꾸는지 추적하기 어렵습니다. 플레이어 데이터에 접근하는 경로를 DataManager 하나로 모으는 Facade를 두고, 값을 바꾸는 지점과 변경 알림을 받는 지점을 분리했습니다. 진영 배정처럼 여러 시스템이 함께 참조하는 값을 다루기 쉬워졌습니다.' },
     ],
-    results: ['DBMS 없이 Google Sheets와 Apps Script로 계정 및 로그 관리 흐름을 엔드포인트부터 클라이언트까지 구현했습니다.', 'Photon 플레이어 데이터 공유와 상호작용, 캐스팅 공통 시스템을 구현했습니다.', '기획 문서를 요구사항과 프로토타입으로 검증하면서 프로그래머 3명, 기획자 5명과 협업했습니다.'],
     youtube: 'https://youtu.be/p3pPeP9O2TY',
     images: [
       { src: '/portfolio-media/image28.png', caption: 'Deus Ex Machina 인게임 장면.' },
       { src: '/portfolio-media/image34.png', caption: 'Deus Ex Machina 상호작용 장면.' },
       { src: '/portfolio-media/image38.png', caption: 'Deus Ex Machina 전투 장면.' },
     ],
-    deepDive: [
+    buildDetails: [
       {
-        heading: 'DBMS 없이 구현한 계정 시스템',
-        body: '서버와 데이터베이스를 운영할 수 없는 환경이었지만, 멀티플레이 게임에는 계정과 접속 기록이 필요했습니다. Google Sheets를 저장소로 쓰고 Apps Script를 웹 엔드포인트로 배포해 서버 역할을 대신하게 했습니다. Unity 클라이언트는 UnityWebRequest로 JSON을 주고받으며 등록과 로그인, 로그아웃을 처리했습니다. 기획자들도 시트에서 계정과 로그를 바로 확인할 수 있어 협업에 도움이 되었습니다.',
+        label: '시트 기반 계정 시스템',
+        target: 0,
         diagram: {
           spec: {
             kind: 'sequence',
@@ -959,8 +951,8 @@ public class AccountService : ServerNetworkService
         },
       },
       {
-        heading: 'Photon 데이터 접근 경로 단일화',
-        body: 'Photon의 커스텀 프로퍼티는 어디서든 읽고 쓸 수 있어 편리하지만, 여러 시스템이 각자 접근하면 어떤 코드가 어떤 값을 언제 바꾸는지 추적하기 어려웠습니다. 그래서 플레이어 데이터에 접근하는 경로를 DataManager 하나로 모으는 Facade를 두었습니다. 값을 바꾸는 지점과 변경 알림을 받는 지점을 분리한 결과, 진영 배정이나 상태 변경처럼 여러 시스템이 함께 참조하는 값을 다루기 쉬워졌습니다.',
+        label: 'Photon 데이터 창구',
+        target: 2,
         diagram: {
           spec: {
             kind: 'layers',
@@ -974,8 +966,8 @@ public class AccountService : ServerNetworkService
         },
       },
       {
-        heading: '반복되는 상호작용의 공통화',
-        body: '이 게임에는 인형 조사와 문 열기, 의식 진행처럼 형태는 다르지만 구조가 같은 상호작용이 반복해서 등장했습니다. 대상을 바라보면 안내가 표시되고, 일정 시간 키를 누르고 있으면 완료되며, 중간에 놓으면 취소되는 흐름입니다. IInteractable로 탐색과 UI 표시를 통일하고, 캐스팅은 두 개의 구조체로 나눴습니다. Cast는 게이지가 차오르는 속도와 목표치, 쿨타임만 담고, CastFuncSet은 진행 조건과 진행 중 동작, 중단 동작, 완료 동작을 선택적으로 담습니다. 그 결과 새 상호작용은 필요한 콜백만 지정해 넘기면 되었고, 인형과 퇴마사처럼 같은 오브젝트를 서로 다른 속도와 완료 동작으로 다루는 경우도 같은 시스템으로 처리할 수 있었습니다.',
+        label: '공통 캐스팅 시스템',
+        target: 1,
         diagram: {
           spec: {
             kind: 'flow',
@@ -1041,24 +1033,20 @@ public override bool Interact( Interactor interactor )
   {
     slug: 'rockman-x5-remake',
     group: 'personal',
-    number: '10',
     category: 'C++ · WINDOWS API · 2D GAME',
     period: '2022.08 — 2022.09',
     title: 'Rockman X5 모작',
     shortTitle: 'ROCKMAN X5',
     summary: 'Windows API로 2D 횡스크롤 게임 프레임워크와 스프라이트 에디터를 제작한 1인 프로젝트입니다.',
-    impact: '자체 게임 프레임워크 · AABB 충돌 · 스프라이트 편집',
     role: 'Solo Developer',
     team: '1-PERSON PROJECT',
     stack: ['C++', 'Windows API', 'GDI+', 'FSM', 'AABB'],
-    context: '록맨 X5 오프닝 스테이지를 목표로 Windows API 기반 2D 게임과 제작 도구를 직접 구현했습니다.',
-    challenge: '외부 게임 엔진 없이 게임 루프와 렌더링, 충돌, 캐릭터 상태, 애니메이션 편집을 하나의 구조로 연결해야 했습니다.',
-    approach: [
-      'Game과 Scene, Camera, Actor, Behavior로 구성된 자체 게임 프레임워크를 설계했습니다.',
-      'AABB로 게임 충돌을 처리하고, 플레이어와 적 AI의 상태는 FSM으로 관리했습니다.',
-      '스프라이트 범위와 Pivot, 애니메이션 프레임을 편집하고 저장하는 에디터를 제작했습니다.',
+    context: '록맨 X5 오프닝 스테이지를 목표로 Windows API만 사용해 만든 2D 게임입니다. 외부 엔진이 없으므로 게임 루프와 렌더링, 충돌, 캐릭터 상태, 그리고 애니메이션을 만드는 도구까지 직접 만들어 하나의 구조로 연결했습니다.',
+    builds: [
+      { label: '자체 게임 프레임워크', body: 'Game이 루프와 시간을 관리하고 Scene이 액터를 소유하며, Actor는 Behavior를 붙여 동작을 갖는 구조로 설계했습니다. Camera는 Scene과 분리해 스크롤을 담당합니다. 엔진이 해 주던 일을 계층으로 나눠 두어 스테이지를 추가할 때 프레임워크는 건드리지 않습니다.' },
+      { label: 'AABB 충돌과 FSM', body: '지형과 캐릭터, 탄환 충돌을 AABB로 처리했습니다. 플레이어와 적 AI의 상태는 FSM으로 관리해 대시와 벽타기, 피격 같은 동작이 서로 섞이지 않도록 전이 조건을 명시했습니다.' },
+      { label: '스프라이트 에디터', body: '스프라이트 시트에서 프레임 범위와 Pivot을 지정하고 애니메이션 순서를 편집해 파일로 저장하는 도구를 만들었습니다. 값을 코드에 적어 넣고 다시 빌드하는 대신, 도구에서 맞추고 게임이 그 파일을 읽습니다.' },
     ],
-    results: ['Windows API만으로 횡스크롤 게임 플레이와 적 AI를 구현했습니다.', '스프라이트 애니메이션을 제작하고 디버깅할 수 있는 도구를 구현했습니다.'],
     youtube: 'https://youtu.be/Izxj7TzOfHA',
     images: [
       { src: '/portfolio-media/image41.jpeg', caption: 'Rockman X5 모작 인게임 전투 화면.' },
@@ -1068,28 +1056,24 @@ public override bool Interact( Interactor interactor )
   {
     slug: 'deadlock-c-tank-game',
     group: 'personal',
-    number: '11',
     category: 'C · CONSOLE · 2D GAME',
     period: '2022.05.08 — 2022.05.18',
     title: 'Deadlock',
     shortTitle: 'DEADLOCK',
     summary: '그래픽 라이브러리 없이 BMP 이미지를 콘솔 픽셀로 출력하는 C언어 2D 턴제 탱크 슈팅 게임을 제작했습니다.',
-    impact: 'BMP 이미지를 콘솔 픽셀로 출력하는 렌더러',
     role: 'Solo Developer',
     team: '1-PERSON PROJECT',
     stack: ['C', 'Windows Console', 'BMP', 'PutPixel/DrawSprite', 'Turn-based AI'],
-    context: '웜즈와 포트리스에서 영감을 받아 콘솔 창에서 플레이하는 2D 탱크 슈팅 게임을 제작했습니다.',
-    challenge: 'C언어와 콘솔 환경만으로 BMP 파일을 읽어 게임 화면을 구성해야 했습니다. 또한 출력 픽셀 간격에 따라 렌더링 속도가 달라지는 문제도 함께 고려해야 했습니다.',
-    approach: [
-      'BMP 파일을 읽어 Surface로 변환하고, 콘솔 문자 하나를 픽셀처럼 사용하는 PutPixel과 DrawSprite 출력 흐름을 구현했습니다. 출력 픽셀 간격을 조정해 화면 해상도와 렌더링 속도의 균형을 맞췄습니다.',
-      '탱크 이동과 포탄의 포물선 발사, 탱크별 데미지, 3스테이지 진행을 구현했습니다.',
-      '플레이어 턴과 AI 턴을 분리하고 난이도에 따라 AI 명중률을 보정했습니다.',
+    context: '웜즈와 포트리스에서 영감을 받아 콘솔 창에서 플레이하는 2D 턴제 탱크 슈팅 게임입니다. C언어와 콘솔만 쓸 수 있는 조건이라 그래픽 라이브러리 없이 BMP 이미지를 화면에 올리는 방법부터 직접 정의했습니다.',
+    builds: [
+      { label: '콘솔 픽셀 렌더러', body: 'BMP 헤더를 읽어 픽셀 배열을 Surface로 올리고, 콘솔에 전각 블록 문자를 출력하면서 ANSI 이스케이프로 문자 색만 바꾸는 방식으로 픽셀을 표현했습니다. 전각 문자는 가로로 두 칸을 차지하므로 커서를 x의 두 배 위치로 옮겨야 정사각형에 가까운 픽셀이 됩니다. BMP는 행이 아래에서 위로 저장되고 각 행이 4바이트 경계에 맞춰 패딩되므로, 로딩할 때 y 진행 방향을 뒤집고 패딩만큼 파일 포인터를 건너뜁니다. 출력 픽셀 간격은 해상도와 렌더링 속도의 균형을 보고 정했습니다.' },
+      { label: '탱크 전투 흐름', body: '탱크 이동과 포탄의 포물선 발사, 탱크별 데미지 계산, 3스테이지 진행과 승패 처리를 구현했습니다.' },
+      { label: '턴 진행과 AI', body: '플레이어 턴과 AI 턴을 분리하고, 난이도에 따라 AI의 조준 명중률을 보정해 난이도 차이를 만들었습니다.' },
     ],
-    results: ['그래픽 라이브러리 없이 콘솔에서 BMP 렌더링을 구현했습니다.', '난이도와 탱크 선택, 턴 진행, 3스테이지 승패 흐름을 구현했습니다.'],
-    deepDive: [
+    buildDetails: [
       {
-        heading: '콘솔 문자를 픽셀로 사용한 렌더링',
-        body: '그래픽 라이브러리 없이 이미지를 출력하려면 출력 방식을 직접 정의해야 했습니다. 이를 위해 BMP 헤더를 읽어 픽셀 배열을 Surface로 올리고, 콘솔에 전각 블록 문자를 출력하면서 ANSI 이스케이프로 문자의 색만 바꾸는 방식으로 픽셀을 표현했습니다. 전각 문자는 가로로 두 칸을 차지하기 때문에 커서를 x의 두 배 위치로 옮겨야 정사각형에 가까운 픽셀이 되었습니다. 또한 BMP는 행이 아래에서 위로 저장되고 각 행이 4바이트 경계에 맞춰 패딩됩니다. 로딩할 때 y 진행 방향을 뒤집고 패딩만큼 파일 포인터를 건너뛰게 처리했습니다.',
+        label: '콘솔 픽셀 렌더러',
+        target: 0,
         diagram: {
           spec: {
             kind: 'flow',
@@ -1148,20 +1132,20 @@ void DrawSpriteClipChroma( int x, int y, Rect srcRect, const Rect clip, Surface*
   {
     slug: 'vr-flight',
     group: 'personal',
-    number: '12',
     category: 'VR · FLIGHT SIMULATION',
     period: '2020.12 — 2021.06',
     title: 'VR Flight Simulation',
     shortTitle: 'VR FLIGHT',
     summary: 'F-16 조종석에서 계기비행과 착륙을 수행하는 PC VR 항공기 시뮬레이터를 Unreal Engine 4로 제작했습니다.',
-    impact: '항공전자 계기 UI · VR 조종 상호작용 · 비행 모델 연동',
     role: 'Team Lead · Developer',
     team: '4-PERSON TEAM',
     stack: ['Unreal Engine 4', 'Blueprint', 'EasyFlightModel Plugin', 'Blender', 'VR'],
-    context: '한서대학교 4인 졸업 프로젝트에서 팀장과 개발자를 맡아 F-16 조종석의 항공전자 장비와 VR 상호작용을 구현하고, EasyFlightModel 비행 모델 플러그인을 Blueprint로 연동했습니다.',
-    challenge: '정해진 기간 안에 비행 상태와 계기 UI를 연동해야 했습니다. 동시에 VR 조종석 상호작용과 항공기 모델 및 애니메이션, 비행 모델 플러그인 연동까지 함께 완성해야 했습니다.',
-    approach: ['HUD와 Air Speed Indicator, Altimeter, Attitude Director 등 주요 항공전자 계기와 로직을 개발했습니다.', '핸드 트래킹을 이용한 조종석 상호작용과 항공기 모델 및 애니메이션을 제작했고, Jira와 Confluence로 일정과 문서를 관리했습니다.', 'EasyFlightModel 플러그인의 비행 데이터 getter와 조종 입력 setter를 Blueprint로 연동했습니다. 조종사 시점과 항공기 시점 카메라를 구현했고, 팀장으로서 기능 우선순위를 정했습니다.'],
-    results: ['VR 핸드 트래킹으로 항공전자 장비를 조작하는 PC VR 시뮬레이터를 완성했습니다. 직접 조종해 계기비행부터 착륙까지 수행되는 것을 확인했습니다.', 'EasyFlightModel 플러그인의 비행 데이터를 F-16 조종석 계기와 연동해 계기비행 상태를 표시했습니다.'],
+    context: '한서대학교 4인 졸업 프로젝트로 만든 PC VR 항공기 시뮬레이터입니다. F-16 조종석에서 계기비행과 착륙까지 수행하는 것이 목표였고, 팀장과 개발자를 겸해 항공전자 계기와 VR 상호작용, 비행 모델 플러그인 연동을 맡았습니다. 비행 물리는 EasyFlightModel 플러그인이 담당하므로, 그 데이터를 조종석 계기와 조종 입력에 연결하는 것이 클라이언트의 몫이었습니다.',
+    builds: [
+      { label: '항공전자 계기', body: 'HUD와 Air Speed Indicator, Altimeter, Attitude Director를 비롯한 주요 계기와 표시 로직을 만들었습니다. 실제 계기의 눈금 규칙을 따라 비행 상태를 읽을 수 있게 구성해, 외부 화면 없이 조종석 안에서만 보고도 계기비행이 가능합니다.' },
+      { label: 'VR 조종석 상호작용', body: '핸드 트래킹으로 스틱과 스로틀, 스위치를 직접 잡고 조작하는 상호작용을 만들었습니다. 항공기 모델과 애니메이션을 제작하고, 조종사 시점과 항공기 외부 시점 카메라를 함께 구현했습니다.' },
+      { label: '비행 모델 연동', body: 'EasyFlightModel 플러그인의 비행 데이터 getter와 조종 입력 setter를 Blueprint로 연결해, 플러그인이 계산한 자세와 속도가 계기에 그대로 나타나고 조종 입력이 다시 플러그인으로 들어가도록 했습니다. 팀장으로서 기능 우선순위를 정하고 Jira와 Confluence로 일정과 문서를 관리했습니다.' },
+    ],
     youtube: 'https://youtu.be/R9U9pKLASw0?t=942',
     links: [{ label: 'GitHub Repository', href: 'https://github.com/ArshesSH/VRFlight' }],
     images: [
@@ -1172,34 +1156,36 @@ void DrawSpriteClipChroma( int x, int y, Rect srcRect, const Rect clip, Surface*
   {
     slug: 'fixed-wing-flight-controller',
     group: 'personal',
-    number: '13',
     category: 'EMBEDDED · FLIGHT CONTROL',
     period: '2020.09 — 2020.12',
     title: 'Sky Stability',
     shortTitle: 'Sky Stability',
     summary: 'Arduino와 C 기반 PID 제어로 RC 고정익 모형기의 자동 자세 보조 시스템을 구현한 4인 캡스톤 프로젝트입니다.',
-    impact: 'PID 기반 고정익 자세 제어',
     role: 'Team Lead · Software Developer',
     team: '4-PERSON TEAM',
     stack: ['Arduino', 'C', 'C++', 'PID Control'],
-    context: '한서대학교 4인 캡스톤 프로젝트에서 팀장과 소프트웨어 개발을 맡아 RC 고정익 모형기의 자세 데이터 전달 과정과 자동 자세 보조 시스템을 개발했습니다.',
-    challenge: 'RC 고정익 모형기의 자세 데이터 전달 과정과 자세 제어 알고리즘을 이해해야 했습니다. 그리고 센서 입력과 서보 출력을 연결하는 제어 루프를 팀 단위로 완성해야 했습니다.',
-    approach: ['자세 센서 데이터를 읽어 기체의 현재 상태를 계산했습니다.', '목표 자세와의 오차를 PID 제어 입력으로 사용하고 서보 출력에 반영했습니다.', '필요한 제어 원리를 학습해 팀원과 공유하며 프로젝트 진행을 관리했습니다.'],
-    results: ['Arduino로 센서 입력과 PID 계산, 서보 출력으로 이어지는 제어 루프를 구현했습니다.', '지상 테스트를 통해 RC 고정익 모형기의 자동 자세 보조 시스템이 동작하는 것을 확인했습니다.'],
+    context: '한서대학교 4인 캡스톤 프로젝트로 만든 RC 고정익 모형기의 자동 자세 보조 시스템입니다. 팀장과 소프트웨어 개발을 맡아 Arduino 위에서 센서 입력부터 서보 출력까지 이어지는 제어 루프를 구성했습니다.',
+    builds: [
+      { label: '자세 추정', body: 'MPU6050의 DMP가 계산한 쿼터니언에서 롤과 피치, 요 각도를 받았습니다. 롤과 피치가 ±90도를 넘어가면 각도 표현이 뒤집히기 때문에 두 축의 부호를 함께 보고 값을 되돌리는 보정을 넣었습니다. 요는 자이로 Z축 각속도를 적분해 쓰는데 값이 그대로 흔들려서, 0.98과 0.02 비율의 1차 저역통과 필터를 거친 뒤 제어 입력으로 넘겼습니다.' },
+      { label: '비행 모드와 PID 제어', body: 'RC 송신기 채널로 수동과 자세 유지, PID 제어 세 가지 모드를 전환하도록 만들었습니다. 자동 모드에서는 조종 스틱이 중립 데드존 안에 있을 때만 제어가 개입하고, 조종자가 스틱을 움직이면 입력을 그대로 서보에 넘깁니다. 조종을 대체하지 않고 손을 뗀 구간만 보조하는 형태입니다. PID 모드는 목표 자세를 0으로 두고 각 축의 오차를 PID로 계산해 서보 각도에 반영했습니다.' },
+      { label: '제어 원리 공유', body: '필요한 자세 제어 원리를 학습해 팀원과 공유하고, 지상 테스트 계획과 프로젝트 진행을 관리했습니다.' },
+    ],
     links: [{ label: 'GitHub Repository', href: 'https://github.com/ArshesSH/Fixed-wing_FlightController' }],
     images: [{ src: '/portfolio-media/image63.png', caption: 'Sky Stability를 적용한 RC 고정익 모형기 시연 화면.' }],
   },
 ]
 
-export const defaultProjects: Project[] = projectSeeds.map((project) => ({
-  ...project,
-  id: `project:${project.slug}`,
-  approach: project.approach.map((text, index) => ({ id: `project:${project.slug}:approach:${index + 1}`, text })),
-  results: project.results.map((text, index) => ({ id: `project:${project.slug}:result:${index + 1}`, text })),
-  images: project.images?.map((image, index) => ({ ...image, id: `project:${project.slug}:image:${index + 1}` })),
-  links: project.links?.map((link, index) => ({ ...link, id: `project:${project.slug}:link:${index + 1}` })),
-  deepDive: project.deepDive?.map((block, index) => ({ ...block, id: `project:${project.slug}:deep-dive:${index + 1}` })),
-}));
+export const defaultProjects: Project[] = projectSeeds.map((project) => {
+  const { buildDetails, ...seed } = project
+  const builds = mergeBuildDetails(seed.builds, buildDetails)
+  return {
+    ...seed,
+    id: `project:${project.slug}`,
+    builds: builds.map((build, index) => ({ ...build, id: `project:${project.slug}:build:${index + 1}` })),
+    images: project.images?.map((image, index) => ({ ...image, id: `project:${project.slug}:image:${index + 1}` })),
+    links: project.links?.map((link, index) => ({ ...link, id: `project:${project.slug}:link:${index + 1}` })),
+  }
+})
 
 const experience: ExperienceItem[] = [
   { id: 'experience:oasis-aix', period: '2025.09 — PRESENT', company: 'OASIS AIX', role: 'AI Lab · 연구원', detail: 'Unity Android AR과 Unreal Engine 5 VR 클라이언트 개발' },

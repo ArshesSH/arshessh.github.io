@@ -45,6 +45,18 @@ function replaceTextItem(items: ContentItem[], id: string, text: string) {
   return items.map((item) => item.id === id ? { ...item, text } : item)
 }
 
+function formatProjectNumber(index: number) {
+  return String(index + 1).padStart(2, '0')
+}
+
+const TILE_BUILD_LIMIT = 4
+
+// builds는 중요한 순으로 정렬한다. 카드에는 앞쪽 일부만 노출하고 나머지는 생략한다.
+function formatBuildLabels(builds: Project['builds']) {
+  const shown = builds.slice(0, TILE_BUILD_LIMIT).map((build) => build.label).join(' · ')
+  return builds.length > TILE_BUILD_LIMIT ? `${shown} 외 ${builds.length - TILE_BUILD_LIMIT}개` : shown
+}
+
 function Header({ project, email, content, onDownload }: { project?: boolean; email: string; content: HeaderContent; onDownload: (variant: PdfVariant) => void }) {
   return (
     <header className="site-header">
@@ -68,16 +80,17 @@ function Header({ project, email, content, onDownload }: { project?: boolean; em
   )
 }
 
-function ProjectGrid({ items, updateContent }: { items: Project[]; updateContent: ContentUpdater }) {
+function ProjectGrid({ items, allProjects, updateContent }: { items: Project[]; allProjects: Project[]; updateContent: ContentUpdater }) {
   const editing = useEditorMode()
   return (
     <div className="project-grid">
-      {items.map((project) => (
-        <a className="project-tile" href={'#/project/' + project.slug} key={project.slug} onClick={(event) => {
+      {items.map((project) => {
+        const projectIndex = allProjects.findIndex((item) => item.id === project.id)
+        return <a className="project-tile" href={'#/project/' + project.slug} key={project.slug} onClick={(event) => {
           if (editing && (event.target as HTMLElement).closest('[contenteditable="true"]')) event.preventDefault()
         }}>
           <div className="tile-top">
-            <EditableText as="span" value={project.number} onChange={(value) => replaceProject(updateContent, project.id, (item) => ({ ...item, number: value }))} ariaLabel="프로젝트 번호" />
+            <span>{formatProjectNumber(projectIndex)}</span>
             <EditableText as="span" value={project.category} onChange={(value) => replaceProject(updateContent, project.id, (item) => ({ ...item, category: value }))} ariaLabel="프로젝트 카테고리" />
             <Arrow />
           </div>
@@ -91,11 +104,11 @@ function ProjectGrid({ items, updateContent }: { items: Project[]; updateContent
             <EditableText as="span" value={project.summary} onChange={(value) => replaceProject(updateContent, project.id, (item) => ({ ...item, summary: value }))} ariaLabel="프로젝트 요약" multiline />
           </div>
           <div className="tile-impact">
-            <small>IMPACT</small>
-            <EditableText as="span" value={project.impact} onChange={(value) => replaceProject(updateContent, project.id, (item) => ({ ...item, impact: value }))} ariaLabel="프로젝트 임팩트" />
+            <small>BUILD</small>
+            <span>{formatBuildLabels(project.builds)}</span>
           </div>
         </a>
-      ))}
+      })}
     </div>
   )
 }
@@ -147,7 +160,7 @@ function Home({ content, updateContent, onDownload }: { content: PortfolioConten
               <a className="all-projects-link" href="#/projects">모든 프로젝트 보기 <span>{content.projects.length.toString().padStart(2, '0')}</span> <Arrow /></a>
             </div>
           </div>
-          <ProjectGrid items={content.projects.slice(0, 4)} updateContent={updateContent} />
+          <ProjectGrid items={content.projects.slice(0, 4)} allProjects={content.projects} updateContent={updateContent} />
         </section>
 
         <Contact content={content} updateContent={updateContent} />
@@ -179,7 +192,7 @@ function ProjectsPage({ content, updateContent, onDownload }: { content: Portfol
               </div>
               <span>{companyProjects.length.toString().padStart(2, '0')} PROJECTS</span>
             </div>
-            <ProjectGrid items={companyProjects} updateContent={updateContent} />
+            <ProjectGrid items={companyProjects} allProjects={content.projects} updateContent={updateContent} />
           </div>
           <div className="archive-group">
             <div className="archive-group-heading">
@@ -190,7 +203,7 @@ function ProjectsPage({ content, updateContent, onDownload }: { content: Portfol
               </div>
               <span>{personalProjects.length.toString().padStart(2, '0')} PROJECTS</span>
             </div>
-            <ProjectGrid items={personalProjects} updateContent={updateContent} />
+            <ProjectGrid items={personalProjects} allProjects={content.projects} updateContent={updateContent} />
           </div>
         </section>
         <Contact content={content} updateContent={updateContent} />
@@ -210,9 +223,46 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
   const youtubeEmbedUrl = project.youtube ? getYoutubeEmbedUrl(project.youtube) : null
 
   const changeProject = (transform: (item: Project) => Project) => replaceProject(updateContent, project.id, transform)
-  const changeApproach = (id: string, text: string) => changeProject((item) => ({ ...item, approach: replaceTextItem(item.approach, id, text) }))
-  const changeResults = (id: string, text: string) => changeProject((item) => ({ ...item, results: replaceTextItem(item.results, id, text) }))
-  const changeBlock = (id: string, transform: (block: NonNullable<Project['deepDive']>[number]) => NonNullable<Project['deepDive']>[number]) => changeProject((item) => ({ ...item, deepDive: item.deepDive?.map((block) => block.id === id ? transform(block) : block) }))
+  const changeBuild = (id: string, transform: (build: Project['builds'][number]) => Project['builds'][number]) => changeProject((item) => ({ ...item, builds: item.builds.map((build) => build.id === id ? transform(build) : build) }))
+
+  const buildContent = (build: Project['builds'][number]) => (
+    <article className="build-item" key={build.id}>
+      <EditableText as="h3" className="build-item-label" value={build.label} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, label: value }))} ariaLabel="만든 것 이름" />
+      <EditableText as="p" value={build.body} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, body: value }))} ariaLabel="만든 것 본문" multiline />
+      {build.diagram && <Diagram
+        spec={build.diagram.spec}
+        caption={build.diagram.caption}
+        onSpecChange={(spec) => changeBuild(build.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, spec } } : item)}
+        onCaptionChange={(value) => changeBuild(build.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, caption: value } } : item)}
+      />}
+      {build.media && <figure className="build-media">
+        {build.media.kind === 'youtube'
+          ? <div className="build-embed"><iframe src={getYoutubeEmbedUrl(build.media.src) ?? ''} title={build.media.caption} loading="lazy" allow="encrypted-media; picture-in-picture; web-share" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
+          : build.media.kind === 'video'
+            ? <video src={build.media.src} controls muted loop playsInline preload="metadata" />
+            : <img src={build.media.src} alt="" loading="lazy" />}
+        <EditableText as="figcaption" value={build.media.caption} onChange={(value) => changeBuild(build.id, (item) => item.media ? { ...item, media: { ...item.media, caption: value } } : item)} ariaLabel="만든 것 미디어 캡션" multiline />
+        <EditableMediaSource label="Build media source" value={build.media.src} onChange={(value) => changeBuild(build.id, (item) => item.media ? { ...item, media: { ...item.media, src: value } } : item)} />
+      </figure>}
+      {build.code && <figure className="build-code">
+        <figcaption><EditableText as="span" value={build.code.label} onChange={(value) => changeBuild(build.id, (item) => item.code ? { ...item, code: { ...item.code, label: value } } : item)} ariaLabel="코드 블록 이름" />{build.code.pseudo ? <em>PSEUDOCODE</em> : <EditableText as="em" value={build.code.lang} onChange={(value) => changeBuild(build.id, (item) => item.code ? { ...item, code: { ...item.code, lang: value } } : item)} ariaLabel="코드 언어" />}</figcaption>
+        <pre><EditableText as="code" value={build.code.source} onChange={(value) => changeBuild(build.id, (item) => item.code ? { ...item, code: { ...item.code, source: value } } : item)} ariaLabel="의사코드" multiline /></pre>
+      </figure>}
+    </article>
+  )
+
+  const caseSections = [
+    {
+      code: 'CONTEXT',
+      title: '배경',
+      content: <EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline />,
+    },
+    {
+      code: 'BUILD',
+      title: '만든 것',
+      content: <div className="build-list">{project.builds.map(buildContent)}</div>,
+    },
+  ]
 
   return (
     <>
@@ -220,7 +270,7 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
       <main id="main" className="project-page">
         <section className="project-hero">
           <div className="project-kicker">
-            <EditableText as="span" value={project.number + ' / ' + content.projects.length.toString().padStart(2, '0')} onChange={() => undefined} ariaLabel="프로젝트 순서" />
+            <span>{formatProjectNumber(index) + ' / ' + content.projects.length.toString().padStart(2, '0')}</span>
             <EditableText as="span" value={project.category} onChange={(value) => changeProject((item) => ({ ...item, category: value }))} ariaLabel="프로젝트 카테고리" />
           </div>
           <EditableText as="h1" value={project.title} onChange={(value) => changeProject((item) => ({ ...item, title: value }))} ariaLabel="프로젝트 제목" />
@@ -258,54 +308,16 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
         </section>}
 
         <section className="case-study section">
-          <div className="case-row"><p className="section-index">01 / CONTEXT</p><div><h2>배경</h2><EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline /></div></div>
-          <div className="case-row"><p className="section-index">02 / CHALLENGE</p><div><h2>문제</h2><EditableText as="p" value={project.challenge} onChange={(value) => changeProject((item) => ({ ...item, challenge: value }))} ariaLabel="프로젝트 문제" multiline /></div></div>
-          <div className="case-row"><p className="section-index">03 / APPROACH</p><div><h2>구현</h2><ol>{project.approach.map((item) => <li key={item.id}><EditableText as="span" value={item.text} onChange={(value) => changeApproach(item.id, value)} ariaLabel="프로젝트 구현 항목" multiline /></li>)}</ol></div></div>
-          <div className="case-row result-row"><p className="section-index">04 / OUTCOME</p><div><h2>결과</h2><ul>{project.results.map((item) => <li key={item.id}><EditableText as="span" value={item.text} onChange={(value) => changeResults(item.id, value)} ariaLabel="프로젝트 결과 항목" multiline /></li>)}</ul></div></div>
+          {caseSections.map((section, sectionIndex) => <div className="case-row" key={section.code}>
+            <p className="section-index">{formatProjectNumber(sectionIndex)} / {section.code}</p>
+            <div><h2>{section.title}</h2>{section.content}</div>
+          </div>)}
           <div className="project-stack"><p className="section-index">TECHNOLOGY</p><ul>{project.stack.map((item, index) => <EditableText as="li" key={index} value={item} onChange={(value) => changeProject((candidate) => ({ ...candidate, stack: candidate.stack.map((stackItem, stackIndex) => stackIndex === index ? value : stackItem) }))} ariaLabel="기술 스택" />)}</ul></div>
           {project.links && <div className="project-links">{project.links.map((link, index) => <span key={link.id}><a href={link.href} target="_blank" rel="noreferrer"><EditableText as="span" value={link.label} onChange={(value) => changeProject((item) => ({ ...item, links: item.links?.map((candidate, linkIndex) => linkIndex === index ? { ...candidate, label: value } : candidate) }))} ariaLabel="프로젝트 링크 이름" /> <Arrow /></a><EditableMediaSource label="Link URL" value={link.href} onChange={(value) => changeProject((item) => ({ ...item, links: item.links?.map((candidate, linkIndex) => linkIndex === index ? { ...candidate, href: value } : candidate) }))} /></span>)}</div>}
         </section>
 
-        {project.deepDive && <section className="deep-dive section">
-          <div className="deep-dive-heading">
-            <p className="section-index">05 / DEEP DIVE</p>
-            <div>
-              <h2>상세 구현</h2>
-              <p>주요 구현 내용을 설계 도면과 실행 화면, 코드로 나누어 설명합니다.</p>
-            </div>
-          </div>
-          {project.deepDive.map((block, blockIndex) => (
-            <article className="deep-dive-block" key={block.id}>
-              <p className="section-index">{(blockIndex + 1).toString().padStart(2, '0')}</p>
-              <div>
-                <EditableText as="h3" value={block.heading} onChange={(value) => changeBlock(block.id, (item) => ({ ...item, heading: value }))} ariaLabel="상세 구현 제목" />
-                <EditableText as="p" value={block.body} onChange={(value) => changeBlock(block.id, (item) => ({ ...item, body: value }))} ariaLabel="상세 구현 본문" multiline />
-                {block.diagram && <Diagram
-                  spec={block.diagram.spec}
-                  caption={block.diagram.caption}
-                  onSpecChange={(spec) => changeBlock(block.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, spec } } : item)}
-                  onCaptionChange={(value) => changeBlock(block.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, caption: value } } : item)}
-                />}
-                {block.media && <figure className="deep-dive-media">
-                  {block.media.kind === 'youtube'
-                    ? <div className="deep-dive-embed"><iframe src={getYoutubeEmbedUrl(block.media.src) ?? ''} title={block.media.caption} loading="lazy" allow="encrypted-media; picture-in-picture; web-share" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
-                    : block.media.kind === 'video'
-                      ? <video src={block.media.src} controls muted loop playsInline preload="metadata" />
-                      : <img src={block.media.src} alt="" loading="lazy" />}
-                  <EditableText as="figcaption" value={block.media.caption} onChange={(value) => changeBlock(block.id, (item) => item.media ? { ...item, media: { ...item.media, caption: value } } : item)} ariaLabel="상세 구현 미디어 캡션" multiline />
-                  <EditableMediaSource label="Deep dive media source" value={block.media.src} onChange={(value) => changeBlock(block.id, (item) => item.media ? { ...item, media: { ...item.media, src: value } } : item)} />
-                </figure>}
-                {block.code && <figure className="deep-dive-code">
-                  <figcaption><EditableText as="span" value={block.code.label} onChange={(value) => changeBlock(block.id, (item) => item.code ? { ...item, code: { ...item.code, label: value } } : item)} ariaLabel="코드 블록 이름" />{block.code.pseudo ? <em>PSEUDOCODE</em> : <EditableText as="em" value={block.code.lang} onChange={(value) => changeBlock(block.id, (item) => item.code ? { ...item, code: { ...item.code, lang: value } } : item)} ariaLabel="코드 언어" />}</figcaption>
-                  <pre><EditableText as="code" value={block.code.source} onChange={(value) => changeBlock(block.id, (item) => item.code ? { ...item, code: { ...item.code, source: value } } : item)} ariaLabel="의사코드" multiline /></pre>
-                </figure>}
-              </div>
-            </article>
-          ))}
-        </section>}
-
         <a className="next-project" href={'#/project/' + next.slug}>
-          <span>NEXT PROJECT · {next.number}</span>
+          <span>NEXT PROJECT · {formatProjectNumber((index + 1) % content.projects.length)}</span>
           <strong>{next.title}</strong>
           <Arrow />
         </a>
@@ -367,6 +379,19 @@ function Contact({ content, updateContent }: { content: PortfolioContent; update
 
 function PrintPortfolio({ content, variant }: { content: PortfolioContent; variant: PdfVariant }) {
   const isFull = variant === 'full'
+  const printBuild = (build: Project['builds'][number]) => <section className="print-build-item" key={build.id}>
+    <h4>{build.label}</h4>
+    <p>{build.body}</p>
+    {build.diagram && <Diagram spec={build.diagram.spec} caption={build.diagram.caption} />}
+    {build.media?.kind === 'image' && <figure className="print-build-media"><img src={build.media.src} alt="" /><figcaption>{build.media.caption}</figcaption></figure>}
+    {build.media?.kind === 'video' && <figure className="print-build-media"><video src={build.media.src} controls muted playsInline preload="metadata" /><figcaption>{build.media.caption}</figcaption></figure>}
+    {build.media?.kind === 'youtube' && <p className="print-build-link">{build.media.caption} <a href={build.media.src}>{build.media.src}</a></p>}
+    {build.code && <figure className="print-build-code"><figcaption><span>{build.code.label}</span><em>{build.code.pseudo ? 'PSEUDOCODE' : build.code.lang}</em></figcaption><pre><code>{build.code.source}</code></pre></figure>}
+  </section>
+  const printSections = (project: Project) => [
+    { code: 'CONTEXT', title: '배경', content: <p>{project.context}</p> },
+    { code: 'BUILD', title: '만든 것', content: isFull ? <div className="print-build-list">{project.builds.map(printBuild)}</div> : <p>{project.builds.map((build) => build.label).join(' · ')}</p> },
+  ]
   return (
     <article className={'print-document' + (isFull ? ' is-full' : ' is-summary')}>
       <header className="print-cover">
@@ -394,15 +419,15 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
         <h2>{content.print.projectIndexHeading}</h2>
         {isFull && <p className="print-index-note">{content.print.projectIndexNote}</p>}
         <div className="print-index-grid">
-          {content.projects.map((project) => <a href={'#project-' + project.slug} key={project.id}><span>{project.number}</span>{project.title}{isFull && project.deepDive && <b aria-label="상세 구현 수록">◆</b>}</a>)}
+          {content.projects.map((project, projectIndex) => <a href={'#project-' + project.slug} key={project.id}><span>{formatProjectNumber(projectIndex)}</span>{project.title}</a>)}
         </div>
       </section>
 
       <section className="print-projects">
-        {content.projects.map((project) => (
+        {content.projects.map((project, projectIndex) => (
           <article className="print-project" id={'project-' + project.slug} key={project.id}>
             <div className="print-project-header">
-              <p className="print-project-kicker">PROJECT {project.number} / {content.projects.length.toString().padStart(2, '0')} · {project.category}</p>
+              <p className="print-project-kicker">PROJECT {formatProjectNumber(projectIndex)} / {content.projects.length.toString().padStart(2, '0')} · {project.category}</p>
               <h2>{project.title}</h2>
               <p className="print-project-summary">{project.summary}</p>
               <dl className="print-project-facts">
@@ -415,23 +440,8 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
             {project.images && <div className="print-project-images">{project.images.map((image) => <figure key={image.id}><img src={image.src} alt="" /><figcaption>{image.caption}</figcaption></figure>)}</div>}
 
             <div className="print-case-study">
-              <div><span>01 / CONTEXT</span><h3>배경</h3><p>{project.context}</p></div>
-              <div><span>02 / CHALLENGE</span><h3>문제</h3><p>{project.challenge}</p></div>
-              <div><span>03 / APPROACH</span><h3>구현</h3><ol>{project.approach.map((item) => <li key={item.id}>{item.text}</li>)}</ol></div>
-              <div><span>04 / OUTCOME</span><h3>결과</h3><ul>{project.results.map((item) => <li key={item.id}>{item.text}</li>)}</ul></div>
+              {printSections(project).map((section, sectionIndex) => <div key={section.code}><span>{formatProjectNumber(sectionIndex)} / {section.code}</span><h3>{section.title}</h3>{section.content}</div>)}
             </div>
-
-            {isFull && project.deepDive && <div className="print-deep-dive">
-              <div className="print-deep-dive-label"><span>05 / DEEP DIVE</span><h3>상세 구현</h3></div>
-              {project.deepDive.map((block, blockIndex) => <section className="print-deep-dive-block" key={block.id}>
-                <h4><em>{(blockIndex + 1).toString().padStart(2, '0')}</em>{block.heading}</h4>
-                <p>{block.body}</p>
-                {block.diagram && <Diagram spec={block.diagram.spec} caption={block.diagram.caption} />}
-                {block.media?.kind === 'image' && <figure className="print-deep-dive-media"><img src={block.media.src} alt="" /><figcaption>{block.media.caption}</figcaption></figure>}
-                {block.media?.kind === 'youtube' && <p className="print-deep-dive-link">{block.media.caption} <a href={block.media.src}>{block.media.src}</a></p>}
-                {block.code && <figure className="print-deep-dive-code"><figcaption><span>{block.code.label}</span><em>{block.code.pseudo ? 'PSEUDOCODE' : block.code.lang}</em></figcaption><pre><code>{block.code.source}</code></pre></figure>}
-              </section>)}
-            </div>}
 
             <div className="print-project-footer">
               <div><span>TECHNOLOGY</span><p>{project.stack.join(' · ')}</p></div>
