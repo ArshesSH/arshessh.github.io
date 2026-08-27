@@ -28,6 +28,17 @@ function isLoopbackAddress(address: string | undefined) {
   return normalized === '127.0.0.1' || normalized.startsWith('127.')
 }
 
+function isLoopbackOrigin(origin: string | undefined) {
+  if (!origin) return false
+  try {
+    const { hostname } = new URL(origin)
+    if (hostname === 'localhost' || hostname === '[::1]' || hostname === '::1') return true
+    return isLoopbackAddress(hostname)
+  } catch {
+    return false
+  }
+}
+
 function sendText(response: ServerResponse, status: number, message: string) {
   response.statusCode = status
   response.setHeader('Content-Type', 'text/plain; charset=utf-8')
@@ -87,6 +98,11 @@ function contentWriterPlugin(): Plugin {
         }
         if (request.method !== 'POST') {
           sendText(response, 405, 'POST만 허용됩니다.')
+          return
+        }
+        // 브라우저는 POST에 항상 Origin을 붙이므로, 로컬 출처가 아니면 CSRF/DNS 리바인딩으로 간주해 거부한다.
+        if (!isLoopbackOrigin(request.headers.origin)) {
+          sendText(response, 403, '로컬 출처의 요청만 허용됩니다.')
           return
         }
 
