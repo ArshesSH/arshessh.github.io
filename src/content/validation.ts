@@ -1,4 +1,4 @@
-import type { DiagramSpec, TreeNode } from '../diagrams'
+import type { DiagramSpec, TreeNode } from './diagram-types'
 import type { PortfolioContent } from './types'
 
 export interface ValidationResult {

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Diagram } from './diagrams'
 import { createDefaultContent } from './content/default-content'
-import { commitActiveEditable, EditorModeProvider, EditorToolbar, EditableText, useEditorMode } from './content/editor'
-import { clearReviewDraft, readReviewDraft, writeReviewDraft } from './content/review-storage'
+import { commitActiveEditable, EditorModeProvider, EditorToolbar, EditableText, useEditorMode, type EditorSaveState } from './content/editor'
+import { saveContent } from './content/content-writer'
 import type { ContentItem, EducationItem, ExperienceItem, HeaderContent, PdfVariant, PortfolioContent, Project } from './content/types'
 
 type ContentUpdater = (updater: (content: PortfolioContent) => PortfolioContent) => void
@@ -462,6 +462,12 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
 
 const EDITOR_ENABLED = import.meta.env.DEV
 
+if (import.meta.hot) {
+  import.meta.hot.accept('./content/default-content', (updatedModule) => {
+    if (updatedModule) window.dispatchEvent(new CustomEvent('content-file-updated', { detail: updatedModule.defaultContent }))
+  })
+}
+
 function isEditRequested() {
   if (!EDITOR_ENABLED) return false
   if (new URLSearchParams(window.location.search).get('edit') === '1') return true
@@ -476,27 +482,75 @@ function App() {
   const [route, setRoute] = useState(getRoute())
   const [printVariant, setPrintVariant] = useState<PdfVariant | null>(null)
   const [editMode, setEditMode] = useState(isEditRequested)
-  const [dirty, setDirty] = useState(false)
-  const [draftExists, setDraftExists] = useState(false)
-  const [savedAt, setSavedAt] = useState<string | null>(null)
+  const [saveState, setSaveState] = useState<EditorSaveState>({ status: 'saved', savedAt: null })
+  const [saveRequest, setSaveRequest] = useState(0)
+  const contentRevisionRef = useRef(0)
+  const lastSavedRevisionRef = useRef(0)
+  const saveInFlightRef = useRef(false)
+  const saveTimerRef = useRef<number | null>(null)
 
   const updateContent: ContentUpdater = (updater) => {
     const next = updater(contentRef.current)
     contentRef.current = next
     setContent(next)
-    setDirty(true)
+    setSaveState((current) => ({ status: 'saving', savedAt: current.savedAt }))
+    contentRevisionRef.current += 1
+    setSaveRequest((request) => request + 1)
   }
 
   useEffect(() => {
     if (!EDITOR_ENABLED) return
-    const draft = readReviewDraft()
-    if (draft) {
-      contentRef.current = draft.content
-      setContent(draft.content)
-      setDraftExists(true)
-      setSavedAt(draft.updatedAt)
+    const updateFromContentFile = (event: Event) => {
+      const nextContent = (event as CustomEvent<PortfolioContent>).detail
+      if (!nextContent || contentRevisionRef.current !== lastSavedRevisionRef.current) return
+      if (JSON.stringify(nextContent) === JSON.stringify(contentRef.current)) return
+      contentRef.current = nextContent
+      setContent(nextContent)
+      setSaveState({ status: 'saved', savedAt: null })
     }
+
+    window.addEventListener('content-file-updated', updateFromContentFile)
+    return () => window.removeEventListener('content-file-updated', updateFromContentFile)
   }, [])
+
+  useEffect(() => {
+    if (!EDITOR_ENABLED || saveRequest === 0) return
+    if (saveTimerRef.current !== null) window.clearTimeout(saveTimerRef.current)
+
+    saveTimerRef.current = window.setTimeout(() => {
+      saveTimerRef.current = null
+      if (saveInFlightRef.current) return
+
+      const revision = contentRevisionRef.current
+      if (revision <= lastSavedRevisionRef.current) return
+      const snapshot = contentRef.current
+      saveInFlightRef.current = true
+      setSaveState((current) => ({ status: 'saving', savedAt: current.savedAt }))
+
+      void saveContent(snapshot).then((result) => {
+        if (revision !== contentRevisionRef.current) return
+        lastSavedRevisionRef.current = revision
+        setSaveState({ status: 'saved', savedAt: result.savedAt })
+      }).catch((error) => {
+        if (revision !== contentRevisionRef.current) return
+        setSaveState((current) => ({
+          status: 'error',
+          savedAt: current.savedAt,
+          error: error instanceof Error ? error.message : '알 수 없는 오류',
+        }))
+      }).finally(() => {
+        saveInFlightRef.current = false
+        if (contentRevisionRef.current > revision) setSaveRequest((request) => request + 1)
+      })
+    }, 300)
+
+    return () => {
+      if (saveTimerRef.current !== null) {
+        window.clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+      }
+    }
+  }, [saveRequest])
 
   useEffect(() => {
     const update = () => { commitActiveEditable(); setRoute(getRoute()); window.scrollTo(0, 0) }
@@ -544,34 +598,11 @@ function App() {
     }, 150)
   }
 
-  const saveDraft = () => {
+  const retrySave = () => {
     commitActiveEditable()
-    const timestamp = new Date().toISOString()
-    const success = writeReviewDraft(contentRef.current, timestamp)
-    if (success) {
-      setDirty(false)
-      setDraftExists(true)
-      setSavedAt(timestamp)
-    }
-    return success
-  }
-
-  const importContent = (nextContent: PortfolioContent, updatedAt?: string) => {
-    contentRef.current = nextContent
-    setContent(nextContent)
-    setDirty(true)
-    setDraftExists(false)
-    setSavedAt(updatedAt ?? null)
-  }
-
-  const resetContent = () => {
-    clearReviewDraft()
-    const nextContent = createDefaultContent()
-    contentRef.current = nextContent
-    setContent(nextContent)
-    setDirty(false)
-    setDraftExists(false)
-    setSavedAt(null)
+    if (contentRevisionRef.current <= lastSavedRevisionRef.current) return
+    setSaveState((current) => ({ status: 'saving', savedAt: current.savedAt }))
+    setSaveRequest((request) => request + 1)
   }
 
   let page
@@ -588,7 +619,7 @@ function App() {
 
   return (
     <EditorModeProvider enabled={editMode}>
-      {EDITOR_ENABLED && editMode && <EditorToolbar getLatestContent={() => contentRef.current} dirty={dirty} draftExists={draftExists} savedAt={savedAt} onSave={saveDraft} onImport={importContent} onReset={resetContent} onExit={() => setEditMode(false)} />}
+      {EDITOR_ENABLED && editMode && <EditorToolbar saveState={saveState} onRetry={retrySave} onExit={() => setEditMode(false)} />}
       <div className="screen-app"><a className="skip-link" href="#main">본문으로 건너뛰기</a>{page}<footer><p>© 2026 김세현 / KIM SAEHYEON</p><p>REAL-TIME 3D ENGINEER · SEOUL</p><a href="#/">HOME ↑</a></footer></div>
       {printVariant && <PrintPortfolio content={content} variant={printVariant} />}
     </EditorModeProvider>

@@ -1,6 +1,4 @@
-import type { DiagramSpec } from '../diagrams'
-
-export const CONTENT_VERSION = 4
+import type { DiagramSpec } from './diagram-types'
 
 export type ProjectGroup = 'company' | 'personal'
 export type PdfVariant = 'summary' | 'full'
@@ -139,10 +137,4 @@ export interface PortfolioContent {
   capabilities: ContentItem[]
   contact: ContactContent
   print: PrintContent
-}
-
-export interface ContentDraft {
-  version: number
-  updatedAt: string
-  content: PortfolioContent
 }
