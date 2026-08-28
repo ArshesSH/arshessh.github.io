@@ -52,7 +52,7 @@ function SequenceDiagram({ spec, onChange }: { spec: Extract<DiagramSpec, { kind
       </div>
       <ol>
         {spec.messages.map((message, index) => (
-          <li className={message.from === 0 ? 'to-right' : 'to-left'} key={index}>
+          <li className={message.from === 2 ? 'to-both' : message.from === 0 ? 'to-right' : 'to-left'} key={index}>
             <EditableText as="strong" value={message.label} onChange={(value) => onChange?.({ ...spec, messages: spec.messages.map((item, itemIndex) => itemIndex === index ? { ...item, label: value } : item) })} ariaLabel="다이어그램 메시지" />
             {message.note && <EditableText as="span" value={message.note} onChange={(value) => onChange?.({ ...spec, messages: spec.messages.map((item, itemIndex) => itemIndex === index ? { ...item, note: value } : item) })} ariaLabel="다이어그램 메시지 설명" multiline />}
           </li>

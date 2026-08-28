@@ -1,4 +1,5 @@
 import { createElement, Fragment, type ReactNode } from 'react'
+import { renderProse } from './prose'
 
 export function EditorModeProvider({ children }: { enabled: boolean; children: ReactNode }) {
   return createElement(Fragment, null, children)
@@ -18,16 +19,12 @@ interface EditableTextProps {
   as?: EditableTag
   className?: string
   multiline?: boolean
+  indent?: boolean
   ariaLabel?: string
 }
 
-function renderText(value: string, multiline: boolean): ReactNode {
-  if (!multiline || !value.includes('\n')) return value
-  return value.split('\n').map((line, index) => index === 0 ? line : createElement(Fragment, { key: index }, createElement('br'), line))
-}
-
-export function EditableText({ value, as = 'span', className, multiline }: EditableTextProps) {
-  return createElement(as, { className }, renderText(value, multiline ?? false))
+export function EditableText({ value, as = 'span', className, multiline, indent = false }: EditableTextProps) {
+  return createElement(as, { className }, renderProse(value, multiline ?? false, indent))
 }
 
 interface EditorToolbarProps {

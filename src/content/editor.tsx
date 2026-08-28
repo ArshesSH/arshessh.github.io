@@ -1,4 +1,5 @@
-import { createContext, createElement, Fragment, useContext, type FocusEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { createContext, createElement, useContext, type FocusEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { renderProse } from './prose'
 import './editor.css'
 
 const EditorModeContext = createContext(false)
@@ -24,17 +25,13 @@ interface EditableTextProps {
   as?: EditableTag
   className?: string
   multiline?: boolean
+  indent?: boolean
   ariaLabel?: string
 }
 
-function renderText(value: string, multiline: boolean): ReactNode {
-  if (!multiline || !value.includes('\n')) return value
-  return value.split('\n').map((line, index) => index === 0 ? line : createElement(Fragment, { key: index }, createElement('br'), line))
-}
-
-export function EditableText({ value, onChange, as = 'span', className, multiline = false, ariaLabel }: EditableTextProps) {
+export function EditableText({ value, onChange, as = 'span', className, multiline = false, indent = false, ariaLabel }: EditableTextProps) {
   const enabled = useContext(EditorModeContext)
-  if (!enabled) return createElement(as, { className }, renderText(value, multiline))
+  if (!enabled) return createElement(as, { className }, renderProse(value, multiline, indent))
 
   const handleBlur = (event: FocusEvent<HTMLElement>) => {
     const nextValue = multiline ? event.currentTarget.innerText : event.currentTarget.textContent
@@ -56,7 +53,7 @@ export function EditableText({ value, onChange, as = 'span', className, multilin
         event.currentTarget.blur()
       }
     },
-  }, renderText(value, multiline))
+  }, renderProse(value, multiline, indent))
 }
 
 export interface EditorSaveState {

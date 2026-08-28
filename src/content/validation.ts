@@ -60,7 +60,7 @@ function isDiagramSpec(value: unknown): value is DiagramSpec {
   if (value.kind === 'sequence') {
     return Array.isArray(value.lanes) && value.lanes.length === 2 && value.lanes.every(isNonEmptyString)
       && Array.isArray(value.messages) && value.messages.length > 0
-      && value.messages.every((message) => isRecord(message) && (message.from === 0 || message.from === 1) && isNonEmptyString(message.label) && (message.note === undefined || typeof message.note === 'string'))
+      && value.messages.every((message) => isRecord(message) && (message.from === 0 || message.from === 1 || message.from === 2) && isNonEmptyString(message.label) && (message.note === undefined || typeof message.note === 'string'))
   }
   if (value.kind === 'bars') {
     return isNonEmptyString(value.unit) && Array.isArray(value.items) && value.items.length > 0

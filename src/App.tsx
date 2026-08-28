@@ -3,6 +3,7 @@ import { Diagram } from './diagrams'
 import { createDefaultContent } from './content/default-content'
 import { commitActiveEditable, EditorModeProvider, EditorToolbar, EditableText, useEditorMode, type EditorSaveState } from './content/editor'
 import { saveContent } from './content/content-writer'
+import { renderProse } from './content/prose'
 import type { ContentItem, EducationItem, ExperienceItem, HeaderContent, PdfVariant, PortfolioContent, Project } from './content/types'
 
 type ContentUpdater = (updater: (content: PortfolioContent) => PortfolioContent) => void
@@ -228,13 +229,13 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
   const buildContent = (build: Project['builds'][number]) => (
     <article className="build-item" key={build.id}>
       <EditableText as="h3" className="build-item-label" value={build.label} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, label: value }))} ariaLabel="구현 항목 이름" />
-      <EditableText as="p" value={build.body} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, body: value }))} ariaLabel="구현 항목 본문" multiline />
       {build.diagram && <Diagram
         spec={build.diagram.spec}
         caption={build.diagram.caption}
         onSpecChange={(spec) => changeBuild(build.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, spec } } : item)}
         onCaptionChange={(value) => changeBuild(build.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, caption: value } } : item)}
       />}
+      <EditableText as="p" value={build.body} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, body: value }))} ariaLabel="구현 항목 본문" multiline indent />
       {build.media && <figure className="build-media">
         {build.media.kind === 'youtube'
           ? <div className="build-embed"><iframe src={getYoutubeEmbedUrl(build.media.src) ?? ''} title={build.media.caption} loading="lazy" allow="encrypted-media; picture-in-picture; web-share" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
@@ -255,7 +256,7 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
     {
       code: 'CONTEXT',
       title: '배경',
-      content: <div className="case-prose"><EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline /></div>,
+      content: <div className="case-prose"><EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline indent /></div>,
     },
     {
       code: 'BUILD',
@@ -377,19 +378,23 @@ function Contact({ content, updateContent }: { content: PortfolioContent; update
   return <section className="contact"><p className="section-index">CONTACT</p><EditableText as="h2" value={content.contact.heading} onChange={(value) => updateContent((current) => ({ ...current, contact: { ...current.contact, heading: value } }))} ariaLabel="연락처 제목" multiline /><a href={'mailto:' + content.contact.email}><EditableText as="span" value={content.contact.email} onChange={(value) => updateContent((current) => ({ ...current, contact: { ...current.contact, email: value } }))} ariaLabel="이메일" /> <Arrow /></a></section>
 }
 
+function ProseParagraphs({ value }: { value: string }) {
+  return <p>{renderProse(value, true, true)}</p>
+}
+
 function PrintPortfolio({ content, variant }: { content: PortfolioContent; variant: PdfVariant }) {
   const isFull = variant === 'full'
   const printBuild = (build: Project['builds'][number]) => <section className="print-build-item" key={build.id}>
     <h4>{build.label}</h4>
-    <p>{build.body}</p>
     {build.diagram && <Diagram spec={build.diagram.spec} caption={build.diagram.caption} />}
+    <ProseParagraphs value={build.body} />
     {build.media?.kind === 'image' && <figure className="print-build-media"><img src={build.media.src} alt="" /><figcaption>{build.media.caption}</figcaption></figure>}
     {build.media?.kind === 'video' && <figure className="print-build-media"><video src={build.media.src} controls muted playsInline preload="metadata" /><figcaption>{build.media.caption}</figcaption></figure>}
     {build.media?.kind === 'youtube' && <p className="print-build-link">{build.media.caption} <a href={build.media.src}>{build.media.src}</a></p>}
     {build.code && <figure className="print-build-code"><figcaption><span>{build.code.label}</span><em>{build.code.pseudo ? 'PSEUDOCODE' : build.code.lang}</em></figcaption><pre><code>{build.code.source}</code></pre></figure>}
   </section>
   const printSections = (project: Project) => [
-    { code: 'CONTEXT', title: '배경', content: <div className="print-prose"><p>{project.context}</p></div> },
+    { code: 'CONTEXT', title: '배경', content: <div className="print-prose"><ProseParagraphs value={project.context} /></div> },
     { code: 'BUILD', title: '구현 내용', content: isFull ? <div className="print-build-list">{project.builds.map(printBuild)}</div> : <div className="print-prose"><p>{project.builds.map((build) => build.label).join(' · ')}</p></div> },
   ]
   return (
