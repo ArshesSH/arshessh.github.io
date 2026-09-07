@@ -79,7 +79,7 @@ function getSaveStatus(saveState: EditorSaveState) {
   if (saveState.status === 'saving') return '저장 중'
   if (saveState.status === 'error') return `저장 실패${saveState.error ? `: ${saveState.error}` : ''}`
   const savedAt = formatSavedAt(saveState.savedAt)
-  return savedAt ? `저장됨 · ${savedAt}` : '저장됨'
+  return savedAt ? `저장됨, ${savedAt}` : '저장됨'
 }
 
 export function EditorToolbar({ saveState, onRetry, onExit }: EditorToolbarProps) {

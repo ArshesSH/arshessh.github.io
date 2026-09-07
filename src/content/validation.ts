@@ -16,6 +16,10 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(isNonEmptyString)
+}
+
 function isHttpUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false
   try {
@@ -49,7 +53,54 @@ function isTreeNode(value: unknown): value is TreeNode {
   return true
 }
 
-function isDiagramSpec(value: unknown): value is DiagramSpec {
+const classRelationTypes = ['inheritance', 'composition', 'association', 'dependency'] as const
+const swimlaneMessageStyles = ['solid', 'dashed'] as const
+
+function isClassRelationType(value: unknown): value is (typeof classRelationTypes)[number] {
+  return typeof value === 'string' && classRelationTypes.includes(value as (typeof classRelationTypes)[number])
+}
+
+function isSwimlaneMessageStyle(value: unknown): value is (typeof swimlaneMessageStyles)[number] {
+  return typeof value === 'string' && swimlaneMessageStyles.includes(value as (typeof swimlaneMessageStyles)[number])
+}
+
+function isClassDiagramSpec(value: UnknownRecord): boolean {
+  if (!Array.isArray(value.classes) || value.classes.length === 0) return false
+  if (!value.classes.every((item) => isRecord(item) && isNonEmptyString(item.id) && isNonEmptyString(item.name)
+    && (item.stereotype === undefined || typeof item.stereotype === 'string')
+    && (item.attributes === undefined || isStringArray(item.attributes))
+    && (item.methods === undefined || isStringArray(item.methods)))) return false
+
+  const classIds = new Set(value.classes.map((item) => isRecord(item) ? item.id : undefined))
+  if (classIds.size !== value.classes.length || classIds.has(undefined)) return false
+  if (!Array.isArray(value.relations)) return false
+  return value.relations.every((relation) => isRecord(relation)
+    && isNonEmptyString(relation.from)
+    && isNonEmptyString(relation.to)
+    && classIds.has(relation.from)
+    && classIds.has(relation.to)
+    && isClassRelationType(relation.type)
+    && (relation.label === undefined || typeof relation.label === 'string'))
+}
+
+function isSwimlaneDiagramSpec(value: UnknownRecord): boolean {
+  if (!Array.isArray(value.lanes) || value.lanes.length < 2) return false
+  if (!value.lanes.every((lane) => isRecord(lane) && isNonEmptyString(lane.id) && isNonEmptyString(lane.label))) return false
+
+  const laneIds = new Set(value.lanes.map((lane) => isRecord(lane) ? lane.id : undefined))
+  if (laneIds.size !== value.lanes.length || laneIds.has(undefined)) return false
+  if (!Array.isArray(value.messages) || value.messages.length === 0) return false
+  return value.messages.every((message) => isRecord(message)
+    && isNonEmptyString(message.from)
+    && isNonEmptyString(message.to)
+    && laneIds.has(message.from)
+    && laneIds.has(message.to)
+    && isNonEmptyString(message.label)
+    && (message.note === undefined || typeof message.note === 'string')
+    && (message.style === undefined || isSwimlaneMessageStyle(message.style)))
+}
+
+export function isDiagramSpec(value: unknown): value is DiagramSpec {
   if (!isRecord(value) || typeof value.kind !== 'string') return false
 
   if (value.kind === 'flow' || value.kind === 'layers') {
@@ -70,7 +121,13 @@ function isDiagramSpec(value: unknown): value is DiagramSpec {
     const isSide = (side: unknown) => isRecord(side) && isNonEmptyString(side.title) && Array.isArray(side.items) && side.items.length > 0 && side.items.every(isNonEmptyString)
     return isSide(value.before) && isSide(value.after)
   }
+  if (value.kind === 'class') return isClassDiagramSpec(value)
+  if (value.kind === 'swimlane') return isSwimlaneDiagramSpec(value)
   return false
+}
+
+function isDiagramBlock(value: unknown) {
+  return isRecord(value) && isDiagramSpec(value.spec) && isNonEmptyString(value.caption)
 }
 
 export function validateContent(value: unknown): ValidationResult {
@@ -103,7 +160,8 @@ export function validateContent(value: unknown): ValidationResult {
     }
     addId(valueToCheck.id, label)
     if (!isNonEmptyString(valueToCheck.label) || !isNonEmptyString(valueToCheck.body)) errors.push(`${label}의 이름 또는 본문이 비어 있습니다.`)
-    if (valueToCheck.diagram !== undefined && (!isRecord(valueToCheck.diagram) || !isDiagramSpec(valueToCheck.diagram.spec) || !isNonEmptyString(valueToCheck.diagram.caption))) errors.push(`${label}의 다이어그램이 올바르지 않습니다.`)
+    if (valueToCheck.diagram !== undefined && !isDiagramBlock(valueToCheck.diagram)) errors.push(`${label}의 다이어그램이 올바르지 않습니다.`)
+    if (valueToCheck.diagrams !== undefined && (!Array.isArray(valueToCheck.diagrams) || !valueToCheck.diagrams.every(isDiagramBlock))) errors.push(`${label}의 다이어그램 목록이 올바르지 않습니다.`)
     if (valueToCheck.media !== undefined) {
       if (!isRecord(valueToCheck.media) || !['image', 'video', 'youtube'].includes(String(valueToCheck.media.kind)) || !isMediaPath(valueToCheck.media.src) || !isNonEmptyString(valueToCheck.media.caption)) errors.push(`${label}의 미디어가 올바르지 않습니다.`)
       if (isRecord(valueToCheck.media) && valueToCheck.media.kind === 'youtube' && !isYoutubeUrl(valueToCheck.media.src)) errors.push(`${label}의 YouTube 미디어 주소가 올바르지 않습니다.`)
@@ -115,7 +173,7 @@ export function validateContent(value: unknown): ValidationResult {
 
   const header = isRecord(value.header) ? value.header : null
   if (!header) errors.push('header가 없습니다.')
-  else ['summaryPdfTitle', 'fullPdfTitle'].forEach((key) => {
+  else ['summaryPdfTitle', 'fullPdfTitle', 'projectsPdfTitle'].forEach((key) => {
     if (!isNonEmptyString(header[key])) errors.push(`header.${key}가 비어 있습니다.`)
   })
 
@@ -223,7 +281,7 @@ export function validateContent(value: unknown): ValidationResult {
   const print = isRecord(value.print) ? value.print : null
   if (!print) errors.push('print가 없습니다.')
   else {
-    ;['coverSummaryFull', 'coverSummarySummary', 'profileHeading', 'projectIndexHeading', 'projectIndexNote', 'footer'].forEach((key) => { if (!isNonEmptyString(print[key])) errors.push(`print.${key}가 비어 있습니다.`) })
+    ;['coverSummaryFull', 'coverSummarySummary', 'profileHeading', 'projectIndexHeading', 'projectIndexNote', 'projectsHeading', 'footer'].forEach((key) => { if (!isNonEmptyString(print[key])) errors.push(`print.${key}가 비어 있습니다.`) })
     if (!Array.isArray(print.profileStatements) || print.profileStatements.length === 0) errors.push('print.profileStatements가 비어 있습니다.')
     else print.profileStatements.forEach((item, index) => checkTextItem(item, `인쇄 프로필 본문 ${index + 1}`))
   }

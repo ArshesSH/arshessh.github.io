@@ -1,7 +1,7 @@
 import type { DiagramSpec } from './diagram-types'
 
 export type ProjectGroup = 'company' | 'personal'
-export type PdfVariant = 'summary' | 'full'
+export type PdfVariant = 'summary' | 'full' | 'projects'
 
 export interface ContentItem {
   id: string
@@ -33,11 +33,17 @@ export interface BuildCode {
   source: string
 }
 
+export interface DiagramBlock {
+  spec: DiagramSpec
+  caption: string
+}
+
 export interface BuildItem {
   id: string
   label: string
   body: string
-  diagram?: { spec: DiagramSpec; caption: string }
+  diagram?: DiagramBlock
+  diagrams?: DiagramBlock[]
   media?: BuildMedia
   code?: BuildCode
 }
@@ -75,6 +81,7 @@ export interface HeroContent {
 export interface HeaderContent {
   summaryPdfTitle: string
   fullPdfTitle: string
+  projectsPdfTitle: string
 }
 
 export interface ProfileContent {
@@ -123,6 +130,7 @@ export interface PrintContent {
   profileStatements: ContentItem[]
   projectIndexHeading: string
   projectIndexNote: string
+  projectsHeading: string
   footer: string
 }
 
