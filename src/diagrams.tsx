@@ -53,7 +53,7 @@ function SequenceDiagram({ spec, onChange }: { spec: Extract<DiagramSpec, { kind
       </div>
       <ol>
         {spec.messages.map((message, index) => (
-          <li className={message.from === 2 ? 'to-both' : message.from === 0 ? 'to-right' : 'to-left'} key={index}>
+          <li className={message.from === 2 ? 'to-both' : message.from === 0 ? 'to-right' : 'to-left'} style={{ gridRow: index + 1 }} key={index}>
             <EditableText as="strong" value={message.label} onChange={(value) => onChange?.({ ...spec, messages: spec.messages.map((item, itemIndex) => itemIndex === index ? { ...item, label: value } : item) })} ariaLabel="다이어그램 메시지" />
             {message.note && <EditableText as="span" value={message.note} onChange={(value) => onChange?.({ ...spec, messages: spec.messages.map((item, itemIndex) => itemIndex === index ? { ...item, note: value } : item) })} ariaLabel="다이어그램 메시지 설명" multiline />}
           </li>
@@ -422,46 +422,51 @@ interface SwimlaneLayout {
   lifelineStartY: number
 }
 
-const SWIMLANE_WIDTH = 180
+const SWIMLANE_WIDTH = 200
 const SWIMLANE_MARGIN_X = 28
 const SWIMLANE_HEADER_Y = 20
-const SWIMLANE_HEADER_HEIGHT = 44
 const SWIMLANE_LIFELINE_GAP = 18
+const SWIMLANE_SELF_INDENT = 46
 
 function getSwimlaneLayout(spec: SwimlaneDiagramSpec): SwimlaneLayout {
   const width = SWIMLANE_MARGIN_X * 2 + spec.lanes.length * SWIMLANE_WIDTH
+  const headerWidth = SWIMLANE_WIDTH - 20
+  const headerHeight = spec.lanes.reduce((tallest, lane) => Math.max(tallest, 20 + estimatedLineCount(lane.label, Math.floor(headerWidth / 9)) * 15), 44)
   const laneCenters = new Map<string, number>()
   const headerBoxes = new Map<string, DiagramBox>()
   spec.lanes.forEach((lane, index) => {
     const x = SWIMLANE_MARGIN_X + index * SWIMLANE_WIDTH
     laneCenters.set(lane.id, x + SWIMLANE_WIDTH / 2)
-    headerBoxes.set(lane.id, { x: x + 10, y: SWIMLANE_HEADER_Y, width: SWIMLANE_WIDTH - 20, height: SWIMLANE_HEADER_HEIGHT })
+    headerBoxes.set(lane.id, { x: x + 10, y: SWIMLANE_HEADER_Y, width: headerWidth, height: headerHeight })
   })
 
-  const lifelineStartY = SWIMLANE_HEADER_Y + SWIMLANE_HEADER_HEIGHT + SWIMLANE_LIFELINE_GAP
-  const rowHeights = spec.messages.map((message) => {
+  const lifelineStartY = SWIMLANE_HEADER_Y + headerHeight + SWIMLANE_LIFELINE_GAP
+  const labelMetrics = spec.messages.map((message) => {
     const fromX = laneCenters.get(message.from) ?? SWIMLANE_MARGIN_X + SWIMLANE_WIDTH / 2
     const toX = laneCenters.get(message.to) ?? fromX
-    const labelWidth = fromX === toX ? SWIMLANE_WIDTH - 30 : Math.max(112, Math.abs(toX - fromX) - 28)
+    const self = fromX === toX
+    const labelWidth = self ? SWIMLANE_WIDTH - SWIMLANE_SELF_INDENT - 14 : Math.max(112, Math.abs(toX - fromX) - 28)
     const labelLines = estimatedLineCount(message.label, Math.max(16, Math.floor(labelWidth / 6)))
-    const noteLines = message.note ? estimatedLineCount(message.note, 34) : 0
-    return 58 + Math.max(0, labelLines - 1) * 15 + noteLines * 16
+    const noteLines = message.note ? estimatedLineCount(message.note, Math.max(18, Math.floor(labelWidth / 5))) : 0
+    return { self, labelWidth, labelHeight: 8 + labelLines * 16 + noteLines * 13 }
   })
+  const rowHeights = labelMetrics.map((metrics) => metrics.self ? Math.max(78, metrics.labelHeight + 34) : metrics.labelHeight + 34)
   const messageStartY = lifelineStartY + 14
   const height = messageStartY + rowHeights.reduce((total, rowHeight) => total + rowHeight, 0) + 24
   let rowTop = messageStartY
   const messages = spec.messages.map((message, index) => {
     const rowHeight = rowHeights[index]
+    const metrics = labelMetrics[index]
     const fromX = laneCenters.get(message.from) ?? SWIMLANE_MARGIN_X + SWIMLANE_WIDTH / 2
     const toX = laneCenters.get(message.to) ?? fromX
     const self = fromX === toX
-    const lineY = rowTop + 23
+    const lineY = self ? rowTop + 16 : rowTop + metrics.labelHeight + 12
     const d = self
       ? `M ${fromX} ${lineY} C ${fromX + 42} ${lineY}, ${fromX + 42} ${lineY + 25}, ${fromX} ${lineY + 25}`
       : `M ${fromX} ${lineY} L ${toX} ${lineY}`
-    const labelX = self ? fromX + 32 : (fromX + toX) / 2
-    const labelWidth = self ? SWIMLANE_WIDTH - 30 : Math.max(112, Math.abs(toX - fromX) - 28)
-    const labelY = self ? lineY + 12 : lineY - 11
+    const labelX = self ? fromX + SWIMLANE_SELF_INDENT : (fromX + toX) / 2
+    const labelWidth = metrics.labelWidth
+    const labelY = self ? lineY + 13 : lineY - 8
     rowTop += rowHeight
     return { d, lineY, labelX, labelY, labelWidth, self }
   })
@@ -480,8 +485,8 @@ function SwimlaneDiagram({ spec, onChange }: { spec: SwimlaneDiagramSpec; onChan
   const updateMessage = (index: number, message: SwimlaneDiagramSpec['messages'][number]) => onChange?.({ ...spec, messages: spec.messages.map((candidate, messageIndex) => messageIndex === index ? message : candidate) })
 
   return (
-    <div className="dg-swimlane-wrap" role="group" aria-label="다중 레인 시퀀스 다이어그램">
-      <div className="dg-swimlane-canvas" style={{ aspectRatio: `${layout.width} / ${layout.height}` }}>
+    <div className="dg-swimlane-wrap" role="group" aria-label="다중 레인 시퀀스 다이어그램" style={{ ['--dg-w' as string]: layout.width, ['--dg-h' as string]: layout.height }}>
+      <div className="dg-swimlane-canvas" style={{ width: layout.width, height: layout.height }}>
         <svg className="dg-connector-layer" viewBox={`0 0 ${layout.width} ${layout.height}`} aria-hidden="true" focusable="false">
           <defs>
             <marker id={`${markerPrefix}-arrow`} viewBox="0 0 12 10" refX="10" refY="5" markerWidth="12" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse">
