@@ -54,6 +54,15 @@
   body.is-printing .print-index-grid a:nth-child(odd){margin-right:7mm}
   body.is-printing .print-index-grid a:nth-child(even){margin-left:7mm}
   body.is-printing .print-index-grid span{color:#687d38;font:7pt var(--mono)}
+  body.is-printing .print-summary-table{padding:8mm 0 0;break-inside:auto}
+  body.is-printing .print-summary-table h3{margin:2mm 0 4mm;font-size:16pt;letter-spacing:-.04em}
+  body.is-printing .print-summary-row{display:grid;grid-template-columns:36mm 38mm 1fr 40mm;gap:4mm;padding:2.6mm 0;border-top:1px solid #e1e3dd;align-items:start;break-inside:avoid;font-size:8pt;line-height:1.55}
+  body.is-printing .print-summary-row.is-head{border-top:1px solid #ccd0c5;color:#687d38;font:7pt var(--mono);letter-spacing:.08em}
+  body.is-printing .print-summary-row b{display:block;font-weight:600}
+  body.is-printing .print-summary-row em{display:block;color:var(--paper-muted);font:7pt var(--mono);font-style:normal;letter-spacing:.04em}
+  body.is-printing .print-summary-row span{color:var(--paper-muted)}
+  body.is-printing .print-summary-row b{color:var(--paper-ink)}
+  body.is-printing .print-summary-stack{font:7.5pt var(--mono);letter-spacing:.02em;word-break:keep-all}
   body.is-printing .print-project{page-break-before:always;padding-top:4mm}
   body.is-printing .print-project-header{padding-bottom:7mm;border-bottom:1px solid #ccd0c5}
   body.is-printing .print-project-header h2{max-width:150mm;margin:5mm 0 3mm;font-size:31pt;line-height:1.05;letter-spacing:-.06em}

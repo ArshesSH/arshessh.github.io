@@ -400,10 +400,35 @@ function ProseParagraphs({ value }: { value: string }) {
   return <p>{renderProse(value, true, true)}</p>
 }
 
+// 요약본 표에는 프로젝트 설명의 첫 문장만 싣는다.
+function firstSentence(value: string) {
+  const line = value.split('\n').map((item) => item.trim()).find((item) => item.length > 0) ?? ''
+  const end = line.indexOf('다. ')
+  return end < 0 ? line : line.slice(0, end + 2)
+}
+
+function PrintProjectTable({ projects, heading, label }: { projects: Project[]; heading: string; label?: string }) {
+  if (projects.length === 0) return null
+  return <section className="print-summary-table">
+    {label && <div className="print-section-label">{label}</div>}
+    <h3>{heading}</h3>
+    <div className="print-summary-row is-head">
+      <span>PROJECT</span><span>ROLE / CONTRIBUTION</span><span>SUMMARY</span><span>STACK</span>
+    </div>
+    {projects.map((project) => <div className="print-summary-row" key={project.id}>
+      <span><b>{project.title}</b><em>{project.period}</em></span>
+      <span><b>{project.role}</b><em>{project.team}</em></span>
+      <span>{firstSentence(project.summary)}</span>
+      <span className="print-summary-stack">{project.stack.join(', ')}</span>
+    </div>)}
+  </section>
+}
+
 function PrintPortfolio({ content, variant }: { content: PortfolioContent; variant: PdfVariant }) {
   // isFull은 구현 상세(도면·코드) 수록 여부, showProfile은 표지·프로필·경력 수록 여부를 가른다.
   const isFull = variant !== 'summary'
   const showProfile = variant !== 'projects'
+  const isSummary = variant === 'summary'
   const printBuild = (build: Project['builds'][number]) => <section className="print-build-item" key={build.id}>
     <h4>{build.label}</h4>
     {getBuildDiagrams(build).map((diagram, diagramIndex) => <Diagram key={`${build.id}-diagram-${diagramIndex}`} spec={diagram.spec} caption={diagram.caption} />)}
@@ -439,7 +464,12 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
         {content.experience.map((item) => <article key={item.id}><span>{item.period}</span><strong>{item.company}</strong><b>{item.role}</b><p>{item.detail}</p></article>)}
       </section>}
 
-      <section className="print-project-index">
+      {isSummary && <>
+        <PrintProjectTable projects={content.projects.filter((project) => project.group === 'company')} heading={content.archive.companyHeading} label="02 / PROJECTS" />
+        <PrintProjectTable projects={content.projects.filter((project) => project.group !== 'company')} heading={content.archive.personalHeading} />
+      </>}
+
+      {!isSummary && <><section className="print-project-index">
         <div className="print-section-label">{showProfile ? '02 / PROJECTS' : 'PROJECTS'}</div>
         <h2>{showProfile ? content.print.projectIndexHeading : content.print.projectsHeading}</h2>
         {isFull && <p className="print-index-note">{content.print.projectIndexNote}</p>}
@@ -478,7 +508,7 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
             </div>
           </article>
         ))}
-      </section>
+      </section></>}
 
       <footer className="print-footer">{content.print.footer}</footer>
     </article>
