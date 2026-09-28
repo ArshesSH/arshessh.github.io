@@ -1109,32 +1109,43 @@
     {
       "slug": "local-llm-media-tools",
       "group": "personal",
-      "category": "LOCAL LLM, AI-ASSISTED DEVELOPMENT",
+      "category": "LOCAL LLM, DEVELOPMENT WORKFLOW",
       "period": "2026 — 현재",
-      "title": "로컬 LLM을 활용한 개인용 미디어 도구 개발",
-      "shortTitle": "LOCAL LLM MEDIA TOOLS",
-      "summary": "로컬 LLM과 코딩 하네스를 활용해 음악 정리 도구 Sound Refine과 영상 업스케일 도구 AI Upscaler를 만들었습니다. Sound Refine은 현재도 사용하며 개선하고 있고, AI Upscaler도 실행 가능한 상태입니다.",
-      "role": "기획·검증 및 AI 보조 개발",
+      "title": "로컬 LLM 환경 구성 및 활용",
+      "shortTitle": "LOCAL LLM LAB",
+      "summary": "Strix Halo에서 로컬 LLM을 운용하며 모델 실행 설정과 코딩 하네스의 속도·사용성을 비교했습니다. 이 환경을 활용해 Sound Refine과 AI Upscaler를 개발했습니다.",
+      "role": "로컬 LLM 환경 구성·AI 보조 개발",
       "team": "1-PERSON PROJECT",
       "stack": [
-        "Python",
-        "FFmpeg",
-        "RIFE",
+        "Strix Halo",
         "llama.cpp",
         "OpenCode",
         "Pi",
-        "DeepSeek Harness"
+        "DeepSeek Harness",
+        "Python",
+        "FFmpeg",
+        "RIFE"
       ],
-      "context": "Strix Halo 기반 로컬 LLM 환경에서 코딩 하네스를 사용해 개인용 프로그램 두 개를 만들었습니다. 직접 코드를 고치기보다 필요한 동작을 지시하고, 생성된 프로그램을 실제 파일로 실행한 뒤 결과를 확인하며 수정 방향을 반복해서 전달했습니다. Sound Refine은 현재도 개발하며 사용 중이고, AI Upscaler도 실행 가능한 상태입니다.",
+      "context": "Strix Halo 기반 로컬 LLM 환경을 개발 작업에 활용하고 있습니다. 시기에 따라 모델을 바꾸며 실행 속도와 응답 품질을 확인했고, 코딩 하네스도 벤치마크와 사용 경험을 바탕으로 선택했습니다. 이 환경에서 요구사항을 지시하고 실제 실행 결과를 검증하는 방식으로 개인용 프로그램 두 개를 만들었습니다.",
       "builds": [
         {
-          "label": "Sound Refine: 음원 변환과 폴더 정리",
-          "body": "고용량 음원을 FFmpeg로 MP3로 변환하고, 중구난방인 음악 폴더 구조를 Jellyfin에서 사용할 수 있는 형태로 정리하는 Python 프로그램입니다. 실제 음원 폴더에서 발견한 구조를 AI 코딩 도구와 함께 패턴으로 묶고, 처리 결과가 원하는 형태와 다르면 해당 사례를 전달해 규칙을 계속 보완했습니다. Windows와 Linux에서 GUI와 CLI로 사용할 수 있습니다.",
+          "label": "모델 실행 설정 비교",
+          "body": "로컬 LLM의 품질을 확인하며 사용할 모델을 시기에 맞춰 바꿨습니다. 최근에는 Qwen3.8-Flash-Next의 실행 속도를 높이기 위해 벤치마크를 만들어 llama.cpp 버전별 결과를 비교하고, MTP 적용 여부도 시험하고 있습니다. 측정 결과를 모델 실행 환경 선택에 반영합니다.",
           "id": "project:local-llm-media-tools:build:1"
         },
         {
-          "label": "AI Upscaler: 영상 처리 파이프라인",
-          "body": "사용자가 영상과 업스케일 배율, 목표 프레임, 업스케일 모델을 선택하면 RIFE로 프레임을 늘리고 선택한 모델로 영상을 업스케일한 뒤 FFmpeg로 인코딩합니다. 올해 초부터 개인 영상에 사용할 수 있도록 만들었으며 Windows와 Linux에서 GUI와 CLI로 실행할 수 있습니다.",
+          "label": "코딩 하네스 선택과 개발 방식",
+          "body": "OpenCode에서는 초기 프롬프트 주입에 시간이 오래 걸려 직접 만든 벤치마크로 Pi와 비교했습니다. Pi가 더 빨라 개발에 사용했고, 현재는 사용 편의성을 고려해 DeepSeek Harness를 쓰고 있습니다. 모델의 한국어 응답 품질이 충분하지 않을 때는 영문 프롬프트를 사용합니다. 코드를 직접 수정하기보다 원하는 동작을 지시하고 실제 실행 결과를 확인한 뒤 수정 방향을 반복해서 전달했습니다.",
+          "id": "project:local-llm-media-tools:build:2"
+        },
+        {
+          "label": "활용 사례: Sound Refine",
+          "body": "고용량 음원을 FFmpeg로 MP3로 변환하고, 불규칙한 음악 폴더 구조를 Jellyfin에서 사용할 수 있는 형태로 정리하는 Python 프로그램입니다. 실제 음원 폴더에서 발견한 구조를 AI 코딩 도구와 함께 패턴으로 묶고, 처리 결과가 원하는 형태와 다르면 해당 사례를 전달해 규칙을 보완했습니다. Windows와 Linux에서 GUI와 CLI로 사용하며 현재도 개발하고 있습니다.",
+          "id": "project:local-llm-media-tools:build:3"
+        },
+        {
+          "label": "활용 사례: AI Upscaler",
+          "body": "사용자가 영상과 업스케일 배율, 목표 프레임, 업스케일 모델을 선택하면 RIFE로 프레임을 늘리고 선택한 모델로 영상을 업스케일한 뒤 FFmpeg로 인코딩합니다. 올해 초에 만들었으며 Windows와 Linux에서 GUI와 CLI로 실행할 수 있습니다.",
           "diagram": {
             "spec": {
               "kind": "flow",
@@ -1147,12 +1158,7 @@
             },
             "caption": "AI Upscaler에서 사용자가 설정한 영상 처리 순서."
           },
-          "id": "project:local-llm-media-tools:build:2"
-        },
-        {
-          "label": "로컬 LLM 실행 환경과 코딩 하네스 비교",
-          "body": "OpenCode 사용 중 초기 프롬프트 주입이 오래 걸려 직접 벤치마크를 만들어 Pi와 비교했습니다. Pi가 더 빠른 결과를 보여 개발에 사용했고, 현재는 사용 편의성을 고려해 DeepSeek Harness를 쓰고 있습니다. 모델의 한국어 응답 품질이 충분하지 않을 때는 영문 프롬프트로 요구사항을 전달했습니다. 최근에는 Qwen3.8-Flash-Next의 실행 속도를 높이기 위해 벤치마크로 llama.cpp 버전을 비교하고 MTP 적용 여부도 시험하고 있습니다.",
-          "id": "project:local-llm-media-tools:build:3"
+          "id": "project:local-llm-media-tools:build:4"
         }
       ],
       "id": "project:local-llm-media-tools"
