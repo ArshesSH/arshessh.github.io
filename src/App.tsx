@@ -424,7 +424,7 @@ function PrintProjectTable({ projects, heading, label }: { projects: Project[]; 
   </section>
 }
 
-function PrintPortfolio({ content, variant }: { content: PortfolioContent; variant: PdfVariant }) {
+function PrintPortfolio({ content, variant, projects = content.projects }: { content: PortfolioContent; variant: PdfVariant; projects?: Project[] }) {
   // isFull은 구현 상세(도면·코드) 수록 여부, showProfile은 표지·프로필·경력 수록 여부를 가른다.
   const isFull = variant !== 'summary'
   const showProfile = variant !== 'projects'
@@ -445,9 +445,9 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
   return (
     <article className={'print-document' + (isFull ? ' is-full' : ' is-summary') + (showProfile ? '' : ' is-projects')}>
       {showProfile && <header className="print-cover">
-        <p className="print-eyebrow">KIM SAEHYEON, PORTFOLIO 2026, {isFull ? 'FULL EDITION' : 'SUMMARY EDITION'}</p>
+        <p className="print-eyebrow">KIM SAEHYEON, PORTFOLIO 2026, {isFull ? (projects.length === content.projects.length ? 'FULL EDITION' : 'SELECTED EDITION') : 'SUMMARY EDITION'}</p>
         <h1>{content.hero.titleLead}<br /><span>{content.hero.titleAccent}</span><br />{content.hero.titleTail}</h1>
-        <p className="print-cover-summary">{isFull ? content.print.coverSummaryFull : content.print.coverSummarySummary}</p>
+        <p className="print-cover-summary">{isFull && projects.length !== content.projects.length ? '선택한 프로젝트의 상세 구현과 설계 도면을 수록한 김세현의 포트폴리오입니다.' : isFull ? content.print.coverSummaryFull : content.print.coverSummarySummary}</p>
         <p className="print-cover-meta">{content.hero.eyebrow}<br />{content.contact.email}</p>
       </header>}
 
@@ -474,15 +474,15 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
         <h2>{showProfile ? content.print.projectIndexHeading : content.print.projectsHeading}</h2>
         {isFull && <p className="print-index-note">{content.print.projectIndexNote}</p>}
         <div className="print-index-grid">
-          {content.projects.map((project, projectIndex) => <a href={'#project-' + project.slug} key={project.id}><span>{formatProjectNumber(projectIndex)}</span>{project.title}</a>)}
+          {projects.map((project, projectIndex) => <a href={'#project-' + project.slug} key={project.id}><span>{formatProjectNumber(projectIndex)}</span>{project.title}</a>)}
         </div>
       </section>
 
       <section className="print-projects">
-        {content.projects.map((project, projectIndex) => (
+        {projects.map((project, projectIndex) => (
           <article className="print-project" id={'project-' + project.slug} key={project.id}>
             <div className="print-project-header">
-              <p className="print-project-kicker">PROJECT {formatProjectNumber(projectIndex)} / {content.projects.length.toString().padStart(2, '0')}, {project.category}</p>
+              <p className="print-project-kicker">PROJECT {formatProjectNumber(projectIndex)} / {projects.length.toString().padStart(2, '0')}, {project.category}</p>
               <h2>{project.title}</h2>
               <p className="print-project-summary">{project.summary}</p>
               <dl className="print-project-facts">
@@ -492,13 +492,7 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
               </dl>
             </div>
 
-            {project.images && <div className="print-project-images">{project.images.map((image) => <figure key={image.id}><img src={image.src} alt="" /><figcaption>{image.caption}</figcaption></figure>)}</div>}
-
-            <div className="print-case-study">
-              {printSections(project).map((section, sectionIndex) => <div key={section.code}><span>{formatProjectNumber(sectionIndex)} / {section.code}</span><h3>{section.title}</h3>{section.content}</div>)}
-            </div>
-
-            <div className="print-project-footer">
+            <div className="print-project-meta">
               <div><span>TECHNOLOGY</span><p>{project.stack.join(', ')}</p></div>
               {(project.youtube || project.links) && <div><span>LINKS</span><p>
                 {project.youtube && <a href={project.youtube} target="_blank" rel="noreferrer">YouTube, {project.youtube}</a>}
@@ -506,6 +500,13 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
                 {project.links?.map((link, linkIndex) => <span key={link.id}>{linkIndex > 0 && ', '}<a href={link.href} target="_blank" rel="noreferrer">{link.label}, {link.href}</a></span>)}
               </p></div>}
             </div>
+
+            {project.images && <div className="print-project-images">{project.images.map((image) => <figure key={image.id}><img src={image.src} alt="" /><figcaption>{image.caption}</figcaption></figure>)}</div>}
+
+            <div className="print-case-study">
+              {printSections(project).map((section, sectionIndex) => <div key={section.code}><span>{formatProjectNumber(sectionIndex)} / {section.code}</span><h3>{section.title}</h3>{section.content}</div>)}
+            </div>
+
           </article>
         ))}
       </section></>}
@@ -520,6 +521,42 @@ const PRINT_TITLES: Record<PdfVariant, string> = {
   summary: '김세현_포트폴리오_요약',
   full: '김세현_포트폴리오_전체',
   projects: '김세현_포트폴리오_프로젝트',
+}
+
+function PdfProjectPicker({ projects, selectedIds, onChange, onClose, onPrint }: {
+  projects: Project[]
+  selectedIds: string[]
+  onChange: (ids: string[]) => void
+  onClose: () => void
+  onPrint: () => void
+}) {
+  const selected = new Set(selectedIds)
+  const toggle = (id: string) => onChange(selected.has(id) ? selectedIds.filter((item) => item !== id) : [...selectedIds, id])
+
+  return <div className="pdf-picker-content">
+    <div className="pdf-picker-heading">
+      <div><p className="section-index">PORTFOLIO PDF</p><h2 id="pdf-picker-title">수록할 프로젝트 선택</h2></div>
+      <button className="pdf-picker-close" type="button" onClick={onClose} aria-label="닫기">×</button>
+    </div>
+    <p className="pdf-picker-description">표지·프로필·경력과 선택한 프로젝트의 상세 내용을 한 PDF로 저장합니다. 프로젝트 내용은 그대로 수록됩니다.</p>
+    <div className="pdf-picker-controls">
+      <span>{selectedIds.length} / {projects.length}개 선택</span>
+      <div><button type="button" onClick={() => onChange(projects.map((project) => project.id))}>전체 선택</button><button type="button" onClick={() => onChange([])}>선택 해제</button></div>
+    </div>
+    <div className="pdf-picker-list">
+      {(['company', 'personal'] as const).map((group) => <fieldset key={group}>
+        <legend>{group === 'company' ? '회사 프로젝트' : '개인 및 팀 프로젝트'}</legend>
+        {projects.filter((project) => project.group === group).map((project) => <label key={project.id}>
+          <input type="checkbox" checked={selected.has(project.id)} onChange={() => toggle(project.id)} />
+          <span>{project.title}</span>
+        </label>)}
+      </fieldset>)}
+    </div>
+    <div className="pdf-picker-footer">
+      <button type="button" onClick={onClose}>취소</button>
+      <button type="button" onClick={onPrint} disabled={selectedIds.length === 0}>선택한 {selectedIds.length}개 프로젝트로 PDF 저장</button>
+    </div>
+  </div>
 }
 
 const EDITOR_ENABLED = import.meta.env.DEV
@@ -543,6 +580,10 @@ function App() {
   const contentRef = useRef(content)
   const [route, setRoute] = useState(getRoute())
   const [printVariant, setPrintVariant] = useState<PdfVariant | null>(null)
+  const [printProjectIds, setPrintProjectIds] = useState<string[] | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>(() => content.projects.map((project) => project.id))
+  const pickerRef = useRef<HTMLDialogElement>(null)
   const [editMode, setEditMode] = useState(isEditRequested)
   const [saveState, setSaveState] = useState<EditorSaveState>({ status: 'saved', savedAt: null })
   const [saveRequest, setSaveRequest] = useState(0)
@@ -642,16 +683,26 @@ function App() {
         documentTitleRef.current = ''
       }
       setPrintVariant(null)
+      setPrintProjectIds(null)
     }
     window.addEventListener('afterprint', finishPrint)
     return () => window.removeEventListener('afterprint', finishPrint)
   }, [])
 
-  const downloadPdf = (variant: PdfVariant) => {
+  useEffect(() => {
+    const dialog = pickerRef.current
+    if (!dialog) return
+    if (pickerOpen && !dialog.open) dialog.showModal()
+    if (!pickerOpen && dialog.open) dialog.close()
+  }, [pickerOpen])
+
+  const startPrint = (variant: PdfVariant, projectIds: string[] | null = null) => {
     commitActiveEditable()
+    setPickerOpen(false)
+    setPrintProjectIds(projectIds)
     document.body.classList.add('is-printing')
     documentTitleRef.current = document.title
-    document.title = PRINT_TITLES[variant]
+    document.title = variant === 'full' && projectIds && projectIds.length < content.projects.length ? '김세현_포트폴리오_선택프로젝트' : PRINT_TITLES[variant]
     setPrintVariant(variant)
     window.setTimeout(async () => {
       const images = Array.from(document.querySelectorAll<HTMLImageElement>('.print-document img'))
@@ -665,6 +716,15 @@ function App() {
       }))
       window.print()
     }, 150)
+  }
+
+  const downloadPdf = (variant: PdfVariant) => {
+    if (variant === 'full') {
+      setSelectedProjectIds(content.projects.map((project) => project.id))
+      setPickerOpen(true)
+      return
+    }
+    startPrint(variant)
   }
 
   const retrySave = () => {
@@ -690,7 +750,10 @@ function App() {
     <EditorModeProvider enabled={editMode}>
       {EDITOR_ENABLED && editMode && <EditorToolbar saveState={saveState} onRetry={retrySave} onExit={() => setEditMode(false)} />}
       <div className="screen-app"><a className="skip-link" href="#main">본문으로 건너뛰기</a>{page}<footer><p>© 2026 김세현 / KIM SAEHYEON</p><p>REAL-TIME 3D ENGINEER, SEOUL</p><a href="#/">HOME ↑</a></footer></div>
-      {printVariant && <PrintPortfolio content={content} variant={printVariant} />}
+      <dialog className="pdf-picker" ref={pickerRef} aria-labelledby="pdf-picker-title" onClose={() => setPickerOpen(false)}>
+        <PdfProjectPicker projects={content.projects} selectedIds={selectedProjectIds} onChange={setSelectedProjectIds} onClose={() => setPickerOpen(false)} onPrint={() => startPrint('full', selectedProjectIds)} />
+      </dialog>
+      {printVariant && <PrintPortfolio content={content} variant={printVariant} projects={printProjectIds ? content.projects.filter((project) => printProjectIds.includes(project.id)) : undefined} />}
     </EditorModeProvider>
   )
 }
