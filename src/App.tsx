@@ -447,7 +447,7 @@ function PrintPortfolio({ content, variant, projects = content.projects }: { con
       {showProfile && <header className="print-cover">
         <p className="print-eyebrow">KIM SAEHYEON, PORTFOLIO 2026, {isFull ? (projects.length === content.projects.length ? 'FULL EDITION' : 'SELECTED EDITION') : 'SUMMARY EDITION'}</p>
         <h1>{content.hero.titleLead}<br /><span>{content.hero.titleAccent}</span><br />{content.hero.titleTail}</h1>
-        <p className="print-cover-summary">{isFull && projects.length !== content.projects.length ? '선택한 프로젝트의 상세 구현과 설계 도면을 수록한 김세현의 포트폴리오입니다.' : isFull ? content.print.coverSummaryFull : content.print.coverSummarySummary}</p>
+        {(!isFull || projects.length === content.projects.length) && <p className="print-cover-summary">{isFull ? content.print.coverSummaryFull : content.print.coverSummarySummary}</p>}
         <p className="print-cover-meta">{content.hero.eyebrow}<br />{content.contact.email}</p>
       </header>}
 
