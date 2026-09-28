@@ -523,35 +523,51 @@ const PRINT_TITLES: Record<PdfVariant, string> = {
   projects: '김세현_포트폴리오_프로젝트',
 }
 
-function PdfProjectPicker({ projects, selectedIds, onChange, onClose, onPrint }: {
+function PdfProjectPicker({ projects, orderedIds, selectedIds, onOrderChange, onChange, onClose, onPrint }: {
   projects: Project[]
+  orderedIds: string[]
   selectedIds: string[]
+  onOrderChange: (ids: string[]) => void
   onChange: (ids: string[]) => void
   onClose: () => void
   onPrint: () => void
 }) {
   const selected = new Set(selectedIds)
   const toggle = (id: string) => onChange(selected.has(id) ? selectedIds.filter((item) => item !== id) : [...selectedIds, id])
+  const projectById = new Map(projects.map((project) => [project.id, project]))
+  const move = (index: number, offset: number) => {
+    const next = [...orderedIds]
+    ;[next[index], next[index + offset]] = [next[index + offset], next[index]]
+    onOrderChange(next)
+  }
 
   return <div className="pdf-picker-content">
     <div className="pdf-picker-heading">
-      <div><p className="section-index">PORTFOLIO PDF</p><h2 id="pdf-picker-title">수록할 프로젝트 선택</h2></div>
+      <div><p className="section-index">PORTFOLIO PDF</p><h2 id="pdf-picker-title">프로젝트 선택 및 순서</h2></div>
       <button className="pdf-picker-close" type="button" onClick={onClose} aria-label="닫기">×</button>
     </div>
-    <p className="pdf-picker-description">표지·프로필·경력과 선택한 프로젝트의 상세 내용을 한 PDF로 저장합니다. 프로젝트 내용은 그대로 수록됩니다.</p>
+    <p className="pdf-picker-description">수록할 프로젝트를 선택하고 화살표로 순서를 바꾸세요. 표시된 순서가 PDF 목차와 본문에 적용됩니다.</p>
     <div className="pdf-picker-controls">
       <span>{selectedIds.length} / {projects.length}개 선택</span>
-      <div><button type="button" onClick={() => onChange(projects.map((project) => project.id))}>전체 선택</button><button type="button" onClick={() => onChange([])}>선택 해제</button></div>
+      <div><button type="button" onClick={() => onChange(orderedIds)}>전체 선택</button><button type="button" onClick={() => onChange([])}>선택 해제</button></div>
     </div>
-    <div className="pdf-picker-list">
-      {(['company', 'personal'] as const).map((group) => <fieldset key={group}>
-        <legend>{group === 'company' ? '회사 프로젝트' : '개인 및 팀 프로젝트'}</legend>
-        {projects.filter((project) => project.group === group).map((project) => <label key={project.id}>
-          <input type="checkbox" checked={selected.has(project.id)} onChange={() => toggle(project.id)} />
-          <span>{project.title}</span>
-        </label>)}
-      </fieldset>)}
-    </div>
+    <ol className="pdf-picker-list" aria-label="PDF 프로젝트 순서">
+      {orderedIds.map((id, index) => {
+        const project = projectById.get(id)
+        if (!project) return null
+        return <li className="pdf-picker-item" key={id}>
+          <span className="pdf-picker-position" aria-hidden="true">{selected.has(id) ? formatProjectNumber(orderedIds.slice(0, index).filter((item) => selected.has(item)).length) : '—'}</span>
+          <label>
+            <input type="checkbox" checked={selected.has(id)} onChange={() => toggle(id)} />
+            <span><strong>{project.title}</strong><small>{project.group === 'company' ? '회사 프로젝트' : '개인 및 팀 프로젝트'}</small></span>
+          </label>
+          <div className="pdf-picker-move" role="group" aria-label={`${project.title} 순서 변경`}>
+            <button type="button" aria-label={`${project.title} 위로 이동`} onClick={() => move(index, -1)} disabled={index === 0}>↑</button>
+            <button type="button" aria-label={`${project.title} 아래로 이동`} onClick={() => move(index, 1)} disabled={index === orderedIds.length - 1}>↓</button>
+          </div>
+        </li>
+      })}
+    </ol>
     <div className="pdf-picker-footer">
       <button type="button" onClick={onClose}>취소</button>
       <button type="button" onClick={onPrint} disabled={selectedIds.length === 0}>선택한 {selectedIds.length}개 프로젝트로 PDF 저장</button>
@@ -582,6 +598,7 @@ function App() {
   const [printVariant, setPrintVariant] = useState<PdfVariant | null>(null)
   const [printProjectIds, setPrintProjectIds] = useState<string[] | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [orderedProjectIds, setOrderedProjectIds] = useState<string[]>(() => content.projects.map((project) => project.id))
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>(() => content.projects.map((project) => project.id))
   const pickerRef = useRef<HTMLDialogElement>(null)
   const [editMode, setEditMode] = useState(isEditRequested)
@@ -720,6 +737,7 @@ function App() {
 
   const downloadPdf = (variant: PdfVariant) => {
     if (variant === 'full') {
+      setOrderedProjectIds(content.projects.map((project) => project.id))
       setSelectedProjectIds(content.projects.map((project) => project.id))
       setPickerOpen(true)
       return
@@ -751,9 +769,9 @@ function App() {
       {EDITOR_ENABLED && editMode && <EditorToolbar saveState={saveState} onRetry={retrySave} onExit={() => setEditMode(false)} />}
       <div className="screen-app"><a className="skip-link" href="#main">본문으로 건너뛰기</a>{page}<footer><p>© 2026 김세현 / KIM SAEHYEON</p><p>REAL-TIME 3D ENGINEER, SEOUL</p><a href="#/">HOME ↑</a></footer></div>
       <dialog className="pdf-picker" ref={pickerRef} aria-labelledby="pdf-picker-title" onClose={() => setPickerOpen(false)}>
-        <PdfProjectPicker projects={content.projects} selectedIds={selectedProjectIds} onChange={setSelectedProjectIds} onClose={() => setPickerOpen(false)} onPrint={() => startPrint('full', selectedProjectIds)} />
+        <PdfProjectPicker projects={content.projects} orderedIds={orderedProjectIds} selectedIds={selectedProjectIds} onOrderChange={setOrderedProjectIds} onChange={setSelectedProjectIds} onClose={() => setPickerOpen(false)} onPrint={() => startPrint('full', orderedProjectIds.filter((id) => selectedProjectIds.includes(id)))} />
       </dialog>
-      {printVariant && <PrintPortfolio content={content} variant={printVariant} projects={printProjectIds ? content.projects.filter((project) => printProjectIds.includes(project.id)) : undefined} />}
+      {printVariant && <PrintPortfolio content={content} variant={printVariant} projects={printProjectIds ? printProjectIds.map((id) => content.projects.find((project) => project.id === id)).filter((project): project is Project => Boolean(project)) : undefined} />}
     </EditorModeProvider>
   )
 }
