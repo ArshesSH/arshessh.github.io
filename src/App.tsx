@@ -3,7 +3,8 @@ import { Diagram } from './diagrams'
 import { createDefaultContent } from './content/default-content'
 import { commitActiveEditable, EditorModeProvider, EditorToolbar, EditableText, useEditorMode, type EditorSaveState } from './content/editor'
 import { saveContent } from './content/content-writer'
-import type { ContentItem, EducationItem, ExperienceItem, HeaderContent, PdfVariant, PortfolioContent, Project } from './content/types'
+import { renderProse } from './content/prose'
+import type { ContentItem, DiagramBlock, EducationItem, ExperienceItem, HeaderContent, PdfVariant, PortfolioContent, Project } from './content/types'
 
 type ContentUpdater = (updater: (content: PortfolioContent) => PortfolioContent) => void
 
@@ -53,8 +54,21 @@ const TILE_BUILD_LIMIT = 4
 
 // builds는 중요한 순으로 정렬한다. 카드에는 앞쪽 일부만 노출하고 나머지는 생략한다.
 function formatBuildLabels(builds: Project['builds']) {
-  const shown = builds.slice(0, TILE_BUILD_LIMIT).map((build) => build.label).join(' · ')
+  const shown = builds.slice(0, TILE_BUILD_LIMIT).map((build) => build.label).join(', ')
   return builds.length > TILE_BUILD_LIMIT ? `${shown} 외 ${builds.length - TILE_BUILD_LIMIT}개` : shown
+}
+
+function getBuildDiagrams(build: Project['builds'][number]): DiagramBlock[] {
+  return [
+    ...(build.diagram ? [build.diagram] : []),
+    ...(build.diagrams ?? []),
+  ]
+}
+
+function updateBuildDiagram(build: Project['builds'][number], diagramIndex: number, transform: (diagram: DiagramBlock) => DiagramBlock): Project['builds'][number] {
+  if (build.diagram && diagramIndex === 0) return { ...build, diagram: transform(build.diagram) }
+  const arrayIndex = build.diagram ? diagramIndex - 1 : diagramIndex
+  return { ...build, diagrams: build.diagrams?.map((diagram, index) => index === arrayIndex ? transform(diagram) : diagram) }
 }
 
 function Header({ project, email, content, onDownload }: { project?: boolean; email: string; content: HeaderContent; onDownload: (variant: PdfVariant) => void }) {
@@ -69,7 +83,11 @@ function Header({ project, email, content, onDownload }: { project?: boolean; em
           <button className="header-pdf" type="button" onClick={() => onDownload('summary')} title={content.summaryPdfTitle}>
             요약 PDF
           </button>
-          <span aria-hidden="true">·</span>
+          <span aria-hidden="true">,</span>
+          <button className="header-pdf" type="button" onClick={() => onDownload('projects')} title={content.projectsPdfTitle}>
+            프로젝트 PDF
+          </button>
+          <span aria-hidden="true">,</span>
           <button className="header-pdf" type="button" onClick={() => onDownload('full')} title={content.fullPdfTitle}>
             전체 PDF <Arrow />
           </button>
@@ -139,7 +157,7 @@ function Home({ content, updateContent, onDownload }: { content: PortfolioConten
             </p>
             <div className="hero-pdf-group">
               <button className="hero-pdf-button" type="button" onClick={() => onDownload('full')}>
-                <span>PORTFOLIO PDF · FULL</span>
+                <span>PORTFOLIO PDF, FULL</span>
                 상세 구현까지 저장 <Arrow />
               </button>
               <button className="hero-pdf-secondary" type="button" onClick={() => onDownload('summary')}>
@@ -228,13 +246,14 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
   const buildContent = (build: Project['builds'][number]) => (
     <article className="build-item" key={build.id}>
       <EditableText as="h3" className="build-item-label" value={build.label} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, label: value }))} ariaLabel="구현 항목 이름" />
-      <EditableText as="p" value={build.body} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, body: value }))} ariaLabel="구현 항목 본문" multiline />
-      {build.diagram && <Diagram
-        spec={build.diagram.spec}
-        caption={build.diagram.caption}
-        onSpecChange={(spec) => changeBuild(build.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, spec } } : item)}
-        onCaptionChange={(value) => changeBuild(build.id, (item) => item.diagram ? { ...item, diagram: { ...item.diagram, caption: value } } : item)}
-      />}
+      {getBuildDiagrams(build).map((diagram, diagramIndex) => <Diagram
+        key={`${build.id}-diagram-${diagramIndex}`}
+        spec={diagram.spec}
+        caption={diagram.caption}
+        onSpecChange={(spec) => changeBuild(build.id, (item) => updateBuildDiagram(item, diagramIndex, (candidate) => ({ ...candidate, spec })))}
+        onCaptionChange={(value) => changeBuild(build.id, (item) => updateBuildDiagram(item, diagramIndex, (candidate) => ({ ...candidate, caption: value })))}
+      />)}
+      <EditableText as="p" value={build.body} onChange={(value) => changeBuild(build.id, (item) => ({ ...item, body: value }))} ariaLabel="구현 항목 본문" multiline indent />
       {build.media && <figure className="build-media">
         {build.media.kind === 'youtube'
           ? <div className="build-embed"><iframe src={getYoutubeEmbedUrl(build.media.src) ?? ''} title={build.media.caption} loading="lazy" allow="encrypted-media; picture-in-picture; web-share" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>
@@ -255,7 +274,7 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
     {
       code: 'CONTEXT',
       title: '배경',
-      content: <div className="case-prose"><EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline /></div>,
+      content: <div className="case-prose"><EditableText as="p" value={project.context} onChange={(value) => changeProject((item) => ({ ...item, context: value }))} ariaLabel="프로젝트 배경" multiline indent /></div>,
     },
     {
       code: 'BUILD',
@@ -317,7 +336,7 @@ function ProjectPage({ project, content, updateContent, onDownload }: { project:
         </section>
 
         <a className="next-project" href={'#/project/' + next.slug}>
-          <span>NEXT PROJECT · {formatProjectNumber((index + 1) % content.projects.length)}</span>
+          <span>NEXT PROJECT, {formatProjectNumber((index + 1) % content.projects.length)}</span>
           <strong>{next.title}</strong>
           <Arrow />
         </a>
@@ -377,57 +396,93 @@ function Contact({ content, updateContent }: { content: PortfolioContent; update
   return <section className="contact"><p className="section-index">CONTACT</p><EditableText as="h2" value={content.contact.heading} onChange={(value) => updateContent((current) => ({ ...current, contact: { ...current.contact, heading: value } }))} ariaLabel="연락처 제목" multiline /><a href={'mailto:' + content.contact.email}><EditableText as="span" value={content.contact.email} onChange={(value) => updateContent((current) => ({ ...current, contact: { ...current.contact, email: value } }))} ariaLabel="이메일" /> <Arrow /></a></section>
 }
 
-function PrintPortfolio({ content, variant }: { content: PortfolioContent; variant: PdfVariant }) {
-  const isFull = variant === 'full'
+function ProseParagraphs({ value }: { value: string }) {
+  return <p>{renderProse(value, true, true)}</p>
+}
+
+// 요약본 표에는 프로젝트 설명의 첫 문장만 싣는다.
+function firstSentence(value: string) {
+  const line = value.split('\n').map((item) => item.trim()).find((item) => item.length > 0) ?? ''
+  const end = line.indexOf('다. ')
+  return end < 0 ? line : line.slice(0, end + 2)
+}
+
+function PrintProjectTable({ projects, heading, label }: { projects: Project[]; heading: string; label?: string }) {
+  if (projects.length === 0) return null
+  return <section className="print-summary-table">
+    {label && <div className="print-section-label">{label}</div>}
+    <h3>{heading}</h3>
+    <div className="print-summary-row is-head">
+      <span>PROJECT</span><span>ROLE / CONTRIBUTION</span><span>SUMMARY</span><span>STACK</span>
+    </div>
+    {projects.map((project) => <div className="print-summary-row" key={project.id}>
+      <span><b>{project.title}</b><em>{project.period}</em></span>
+      <span><b>{project.role}</b><em>{project.team}</em></span>
+      <span>{firstSentence(project.summary)}</span>
+      <span className="print-summary-stack">{project.stack.join(', ')}</span>
+    </div>)}
+  </section>
+}
+
+function PrintPortfolio({ content, variant, projects = content.projects }: { content: PortfolioContent; variant: PdfVariant; projects?: Project[] }) {
+  // isFull은 구현 상세(도면·코드) 수록 여부, showProfile은 표지·프로필·경력 수록 여부를 가른다.
+  const isFull = variant !== 'summary'
+  const showProfile = variant !== 'projects'
+  const isSummary = variant === 'summary'
   const printBuild = (build: Project['builds'][number]) => <section className="print-build-item" key={build.id}>
     <h4>{build.label}</h4>
-    <p>{build.body}</p>
-    {build.diagram && <Diagram spec={build.diagram.spec} caption={build.diagram.caption} />}
+    {getBuildDiagrams(build).map((diagram, diagramIndex) => <Diagram key={`${build.id}-diagram-${diagramIndex}`} spec={diagram.spec} caption={diagram.caption} />)}
+    <ProseParagraphs value={build.body} />
     {build.media?.kind === 'image' && <figure className="print-build-media"><img src={build.media.src} alt="" /><figcaption>{build.media.caption}</figcaption></figure>}
     {build.media?.kind === 'video' && <figure className="print-build-media"><video src={build.media.src} controls muted playsInline preload="metadata" /><figcaption>{build.media.caption}</figcaption></figure>}
     {build.media?.kind === 'youtube' && <p className="print-build-link">{build.media.caption} <a href={build.media.src}>{build.media.src}</a></p>}
     {build.code && <figure className="print-build-code"><figcaption><span>{build.code.label}</span><em>{build.code.pseudo ? 'PSEUDOCODE' : build.code.lang}</em></figcaption><pre><code>{build.code.source}</code></pre></figure>}
   </section>
   const printSections = (project: Project) => [
-    { code: 'CONTEXT', title: '배경', content: <div className="print-prose"><p>{project.context}</p></div> },
-    { code: 'BUILD', title: '구현 내용', content: isFull ? <div className="print-build-list">{project.builds.map(printBuild)}</div> : <div className="print-prose"><p>{project.builds.map((build) => build.label).join(' · ')}</p></div> },
+    { code: 'CONTEXT', title: '배경', content: <div className="print-prose"><ProseParagraphs value={project.context} /></div> },
+    { code: 'BUILD', title: '구현 내용', content: isFull ? <div className="print-build-list">{project.builds.map(printBuild)}</div> : <div className="print-prose"><p>{project.builds.map((build) => build.label).join(', ')}</p></div> },
   ]
   return (
-    <article className={'print-document' + (isFull ? ' is-full' : ' is-summary')}>
-      <header className="print-cover">
-        <p className="print-eyebrow">KIM SAEHYEON · PORTFOLIO 2026 · {isFull ? 'FULL EDITION' : 'SUMMARY EDITION'}</p>
+    <article className={'print-document' + (isFull ? ' is-full' : ' is-summary') + (showProfile ? '' : ' is-projects')}>
+      {showProfile && <header className="print-cover">
+        <p className="print-eyebrow">KIM SAEHYEON, PORTFOLIO 2026, {isFull ? (projects.length === content.projects.length ? 'FULL EDITION' : 'SELECTED EDITION') : 'SUMMARY EDITION'}</p>
         <h1>{content.hero.titleLead}<br /><span>{content.hero.titleAccent}</span><br />{content.hero.titleTail}</h1>
-        <p className="print-cover-summary">{isFull ? content.print.coverSummaryFull : content.print.coverSummarySummary}</p>
+        {(!isFull || projects.length === content.projects.length) && <p className="print-cover-summary">{isFull ? content.print.coverSummaryFull : content.print.coverSummarySummary}</p>}
         <p className="print-cover-meta">{content.hero.eyebrow}<br />{content.contact.email}</p>
-      </header>
+      </header>}
 
-      <section className="print-profile">
+      {showProfile && <section className="print-profile">
         <div className="print-section-label">01 / PROFILE</div>
         <div>
           <h2>{content.print.profileHeading}</h2>
           {content.print.profileStatements.map((statement) => <p key={statement.id}>{statement.text}</p>)}
         </div>
-      </section>
+      </section>}
 
-      <section className="print-experience">
+      {showProfile && <section className="print-experience">
         <div className="print-section-label">EXPERIENCE</div>
         {content.experience.map((item) => <article key={item.id}><span>{item.period}</span><strong>{item.company}</strong><b>{item.role}</b><p>{item.detail}</p></article>)}
-      </section>
+      </section>}
 
-      <section className="print-project-index">
-        <div className="print-section-label">02 / PROJECTS</div>
-        <h2>{content.print.projectIndexHeading}</h2>
+      {isSummary && <>
+        <PrintProjectTable projects={content.projects.filter((project) => project.group === 'company')} heading={content.archive.companyHeading} label="02 / PROJECTS" />
+        <PrintProjectTable projects={content.projects.filter((project) => project.group !== 'company')} heading={content.archive.personalHeading} />
+      </>}
+
+      {!isSummary && <><section className="print-project-index">
+        <div className="print-section-label">{showProfile ? '02 / PROJECTS' : 'PROJECTS'}</div>
+        <h2>{showProfile ? content.print.projectIndexHeading : content.print.projectsHeading}</h2>
         {isFull && <p className="print-index-note">{content.print.projectIndexNote}</p>}
         <div className="print-index-grid">
-          {content.projects.map((project, projectIndex) => <a href={'#project-' + project.slug} key={project.id}><span>{formatProjectNumber(projectIndex)}</span>{project.title}</a>)}
+          {projects.map((project, projectIndex) => <a href={'#project-' + project.slug} key={project.id}><span>{formatProjectNumber(projectIndex)}</span>{project.title}</a>)}
         </div>
       </section>
 
       <section className="print-projects">
-        {content.projects.map((project, projectIndex) => (
+        {projects.map((project, projectIndex) => (
           <article className="print-project" id={'project-' + project.slug} key={project.id}>
             <div className="print-project-header">
-              <p className="print-project-kicker">PROJECT {formatProjectNumber(projectIndex)} / {content.projects.length.toString().padStart(2, '0')} · {project.category}</p>
+              <p className="print-project-kicker">PROJECT {formatProjectNumber(projectIndex)} / {projects.length.toString().padStart(2, '0')}, {project.category}</p>
               <h2>{project.title}</h2>
               <p className="print-project-summary">{project.summary}</p>
               <dl className="print-project-facts">
@@ -437,27 +492,87 @@ function PrintPortfolio({ content, variant }: { content: PortfolioContent; varia
               </dl>
             </div>
 
+            <div className="print-project-meta">
+              <div><span>TECHNOLOGY</span><p>{project.stack.join(', ')}</p></div>
+              {(project.youtube || project.links) && <div><span>LINKS</span><p>
+                {project.youtube && <a href={project.youtube} target="_blank" rel="noreferrer">YouTube, {project.youtube}</a>}
+                {project.youtube && project.links && ', '}
+                {project.links?.map((link, linkIndex) => <span key={link.id}>{linkIndex > 0 && ', '}<a href={link.href} target="_blank" rel="noreferrer">{link.label}, {link.href}</a></span>)}
+              </p></div>}
+            </div>
+
             {project.images && <div className="print-project-images">{project.images.map((image) => <figure key={image.id}><img src={image.src} alt="" /><figcaption>{image.caption}</figcaption></figure>)}</div>}
 
             <div className="print-case-study">
               {printSections(project).map((section, sectionIndex) => <div key={section.code}><span>{formatProjectNumber(sectionIndex)} / {section.code}</span><h3>{section.title}</h3>{section.content}</div>)}
             </div>
 
-            <div className="print-project-footer">
-              <div><span>TECHNOLOGY</span><p>{project.stack.join(' · ')}</p></div>
-              {(project.youtube || project.links) && <div><span>LINKS</span><p>
-                {project.youtube && <a href={project.youtube} target="_blank" rel="noreferrer">YouTube · {project.youtube}</a>}
-                {project.youtube && project.links && ' · '}
-                {project.links?.map((link, linkIndex) => <span key={link.id}>{linkIndex > 0 && ' · '}<a href={link.href} target="_blank" rel="noreferrer">{link.label} · {link.href}</a></span>)}
-              </p></div>}
-            </div>
           </article>
         ))}
-      </section>
+      </section></>}
 
       <footer className="print-footer">{content.print.footer}</footer>
     </article>
   )
+}
+
+// 브라우저는 인쇄 저장 시 document.title을 파일명 기본값으로 쓴다.
+const PRINT_TITLES: Record<PdfVariant, string> = {
+  summary: '김세현_포트폴리오_요약',
+  full: '김세현_포트폴리오_전체',
+  projects: '김세현_포트폴리오_프로젝트',
+}
+
+function PdfProjectPicker({ projects, orderedIds, selectedIds, onOrderChange, onChange, onClose, onPrint }: {
+  projects: Project[]
+  orderedIds: string[]
+  selectedIds: string[]
+  onOrderChange: (ids: string[]) => void
+  onChange: (ids: string[]) => void
+  onClose: () => void
+  onPrint: () => void
+}) {
+  const selected = new Set(selectedIds)
+  const toggle = (id: string) => onChange(selected.has(id) ? selectedIds.filter((item) => item !== id) : [...selectedIds, id])
+  const projectById = new Map(projects.map((project) => [project.id, project]))
+  const move = (index: number, offset: number) => {
+    const next = [...orderedIds]
+    ;[next[index], next[index + offset]] = [next[index + offset], next[index]]
+    onOrderChange(next)
+  }
+
+  return <div className="pdf-picker-content">
+    <div className="pdf-picker-heading">
+      <div><p className="section-index">PORTFOLIO PDF</p><h2 id="pdf-picker-title">프로젝트 선택 및 순서</h2></div>
+      <button className="pdf-picker-close" type="button" onClick={onClose} aria-label="닫기">×</button>
+    </div>
+    <p className="pdf-picker-description">수록할 프로젝트를 선택하고 화살표로 순서를 바꾸세요. 표시된 순서가 PDF 목차와 본문에 적용됩니다.</p>
+    <div className="pdf-picker-controls">
+      <span>{selectedIds.length} / {projects.length}개 선택</span>
+      <div><button type="button" onClick={() => onChange(orderedIds)}>전체 선택</button><button type="button" onClick={() => onChange([])}>선택 해제</button></div>
+    </div>
+    <ol className="pdf-picker-list" aria-label="PDF 프로젝트 순서">
+      {orderedIds.map((id, index) => {
+        const project = projectById.get(id)
+        if (!project) return null
+        return <li className="pdf-picker-item" key={id}>
+          <span className="pdf-picker-position" aria-hidden="true">{selected.has(id) ? formatProjectNumber(orderedIds.slice(0, index).filter((item) => selected.has(item)).length) : '—'}</span>
+          <label>
+            <input type="checkbox" checked={selected.has(id)} onChange={() => toggle(id)} />
+            <span><strong>{project.title}</strong><small>{project.group === 'company' ? '회사 프로젝트' : '개인 및 팀 프로젝트'}</small></span>
+          </label>
+          <div className="pdf-picker-move" role="group" aria-label={`${project.title} 순서 변경`}>
+            <button type="button" aria-label={`${project.title} 위로 이동`} onClick={() => move(index, -1)} disabled={index === 0}>↑</button>
+            <button type="button" aria-label={`${project.title} 아래로 이동`} onClick={() => move(index, 1)} disabled={index === orderedIds.length - 1}>↓</button>
+          </div>
+        </li>
+      })}
+    </ol>
+    <div className="pdf-picker-footer">
+      <button type="button" onClick={onClose}>취소</button>
+      <button type="button" onClick={onPrint} disabled={selectedIds.length === 0}>선택한 {selectedIds.length}개 프로젝트로 PDF 저장</button>
+    </div>
+  </div>
 }
 
 const EDITOR_ENABLED = import.meta.env.DEV
@@ -481,6 +596,11 @@ function App() {
   const contentRef = useRef(content)
   const [route, setRoute] = useState(getRoute())
   const [printVariant, setPrintVariant] = useState<PdfVariant | null>(null)
+  const [printProjectIds, setPrintProjectIds] = useState<string[] | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [orderedProjectIds, setOrderedProjectIds] = useState<string[]>(() => content.projects.map((project) => project.id))
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>(() => content.projects.map((project) => project.id))
+  const pickerRef = useRef<HTMLDialogElement>(null)
   const [editMode, setEditMode] = useState(isEditRequested)
   const [saveState, setSaveState] = useState<EditorSaveState>({ status: 'saved', savedAt: null })
   const [saveRequest, setSaveRequest] = useState(0)
@@ -488,6 +608,7 @@ function App() {
   const lastSavedRevisionRef = useRef(0)
   const saveInFlightRef = useRef(false)
   const saveTimerRef = useRef<number | null>(null)
+  const documentTitleRef = useRef('')
 
   const updateContent: ContentUpdater = (updater) => {
     const next = updater(contentRef.current)
@@ -574,15 +695,31 @@ function App() {
   useEffect(() => {
     const finishPrint = () => {
       document.body.classList.remove('is-printing')
+      if (documentTitleRef.current) {
+        document.title = documentTitleRef.current
+        documentTitleRef.current = ''
+      }
       setPrintVariant(null)
+      setPrintProjectIds(null)
     }
     window.addEventListener('afterprint', finishPrint)
     return () => window.removeEventListener('afterprint', finishPrint)
   }, [])
 
-  const downloadPdf = (variant: PdfVariant) => {
+  useEffect(() => {
+    const dialog = pickerRef.current
+    if (!dialog) return
+    if (pickerOpen && !dialog.open) dialog.showModal()
+    if (!pickerOpen && dialog.open) dialog.close()
+  }, [pickerOpen])
+
+  const startPrint = (variant: PdfVariant, projectIds: string[] | null = null) => {
     commitActiveEditable()
+    setPickerOpen(false)
+    setPrintProjectIds(projectIds)
     document.body.classList.add('is-printing')
+    documentTitleRef.current = document.title
+    document.title = variant === 'full' && projectIds && projectIds.length < content.projects.length ? '김세현_포트폴리오_선택프로젝트' : PRINT_TITLES[variant]
     setPrintVariant(variant)
     window.setTimeout(async () => {
       const images = Array.from(document.querySelectorAll<HTMLImageElement>('.print-document img'))
@@ -596,6 +733,16 @@ function App() {
       }))
       window.print()
     }, 150)
+  }
+
+  const downloadPdf = (variant: PdfVariant) => {
+    if (variant === 'full') {
+      setOrderedProjectIds(content.projects.map((project) => project.id))
+      setSelectedProjectIds(content.projects.map((project) => project.id))
+      setPickerOpen(true)
+      return
+    }
+    startPrint(variant)
   }
 
   const retrySave = () => {
@@ -620,8 +767,11 @@ function App() {
   return (
     <EditorModeProvider enabled={editMode}>
       {EDITOR_ENABLED && editMode && <EditorToolbar saveState={saveState} onRetry={retrySave} onExit={() => setEditMode(false)} />}
-      <div className="screen-app"><a className="skip-link" href="#main">본문으로 건너뛰기</a>{page}<footer><p>© 2026 김세현 / KIM SAEHYEON</p><p>REAL-TIME 3D ENGINEER · SEOUL</p><a href="#/">HOME ↑</a></footer></div>
-      {printVariant && <PrintPortfolio content={content} variant={printVariant} />}
+      <div className="screen-app"><a className="skip-link" href="#main">본문으로 건너뛰기</a>{page}<footer><p>© 2026 김세현 / KIM SAEHYEON</p><p>REAL-TIME 3D ENGINEER, SEOUL</p><a href="#/">HOME ↑</a></footer></div>
+      <dialog className="pdf-picker" ref={pickerRef} aria-labelledby="pdf-picker-title" onClose={() => setPickerOpen(false)}>
+        <PdfProjectPicker projects={content.projects} orderedIds={orderedProjectIds} selectedIds={selectedProjectIds} onOrderChange={setOrderedProjectIds} onChange={setSelectedProjectIds} onClose={() => setPickerOpen(false)} onPrint={() => startPrint('full', orderedProjectIds.filter((id) => selectedProjectIds.includes(id)))} />
+      </dialog>
+      {printVariant && <PrintPortfolio content={content} variant={printVariant} projects={printProjectIds ? printProjectIds.map((id) => content.projects.find((project) => project.id === id)).filter((project): project is Project => Boolean(project)) : undefined} />}
     </EditorModeProvider>
   )
 }
